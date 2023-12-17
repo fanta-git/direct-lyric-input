@@ -234,6 +234,3 @@ function getClientInfo() end
 ---@field getUUID fun(s: self): string Universally Unique Identifier を取得します。名前とは違い、UUID はプロジェクト全体で一意なので、NoteGroupReference と NoteGroup を関連付けるために使用することができます。 UUIDは次のようなものになります： "ab85d637-d80b-4628-9c27-007ea74029af" 。
 ---@field removeNote fun(s: self, index: number): nil 添え字が index のノートを削除します。
 ---@field setName fun(s: self, name: string): nil この NoteGroup の名前を設定します。
-
----@class SynthV
-SV = {}

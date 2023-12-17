@@ -1,0 +1,81 @@
+local VIEW_TOLERANCE = 0.1
+
+---@diagnostic disable-next-line: lowercase-global
+function getClientInfo()
+  return {
+    name = "DLIn: lyric-clear",
+    category = "Direct Lyric Input",
+    author = "fanta",
+    versionNumber = 1,
+    minEditorVersion = 65540
+  }
+end
+
+---ノート配列を親グループのインデックス順にソート（破壊的）
+---@param notes Note[]
+---@return Note[]
+local function sortNotesByIndex(notes)
+  local indexs = {}
+  for _, note in ipairs(notes) do
+    indexs[note] = note:getIndexInParent()
+  end
+
+  table.sort(notes, function (a, b)
+    return indexs[a] < indexs[b]
+  end)
+
+  return notes
+end
+
+---ノートが画面外にある時、収まるように画面を移動する
+---@param mainEditor MainEditorView
+---@param note Note
+local function focusNote(mainEditor, note)
+  local coordinate = mainEditor:getNavigation()
+  local viewRangeHorizontal = coordinate:getTimeViewRange()
+  local viewLeft, viewRight = viewRangeHorizontal[1], viewRangeHorizontal[2]
+  local noteLeft, noteRight = note:getOnset(), note:getEnd()
+
+  local toleranceBlicks = (viewRight - viewLeft) * VIEW_TOLERANCE
+
+  if noteRight < viewLeft + toleranceBlicks or viewRight - toleranceBlicks < noteLeft then
+    coordinate:setTimeLeft(noteLeft - toleranceBlicks)
+  end
+
+  local viewRangeVertical = coordinate:getValueViewRange()
+  local viewBottom, viewTop = viewRangeVertical[1], viewRangeVertical[2]
+  local notePitch = note:getPitch()
+
+  if notePitch < viewBottom or viewTop < notePitch then
+    coordinate:setValueCenter(notePitch)
+  end
+end
+
+---@diagnostic disable-next-line: lowercase-global
+function main()
+  local mainEditor = SV:getMainEditor()
+  local selectedNotes = sortNotesByIndex(mainEditor:getSelection():getSelectedNotes())
+  if #selectedNotes == 0 then
+    return SV:finish()
+  end
+
+  for i = #selectedNotes, 1, -1 do
+    local note = selectedNotes[i]
+    local lyric = note:getLyrics()
+
+    if lyric ~= "" then
+      local subbed = lyric:sub(1, utf8.offset(lyric, -1) - 1)
+      note:setLyrics(subbed)
+      focusNote(mainEditor, (subbed == "") and selectedNotes[i - 1] or note)
+
+      return SV:finish()
+    end
+  end
+
+  local currentGroup = mainEditor:getCurrentGroup():getTarget()
+  for _, note in ipairs(selectedNotes) do
+    currentGroup:removeNote(note:getIndexInParent())
+  end
+
+  return SV:finish()
+end

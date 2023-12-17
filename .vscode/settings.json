@@ -1,0 +1,14 @@
+{
+    "Lua.diagnostics.globals": [
+        "__KEY__",
+        "__KEY_LENGHT__",
+        "__KANA_RULES__",
+        "__SLIDE_KEYS_SET__",
+        "__LYRIC_END_PATTERN__",
+        "__NEXT_NOTE_CHAR__",
+        "__VIEW_TOLERANCE__",
+        "__USE_HIRAGANA__",
+        "__KEY_NAME__",
+        "SV"
+    ]
+}

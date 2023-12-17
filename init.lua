@@ -1,12 +1,34 @@
+----------------------------------------------
+--- ここから設定用
+----------------------------------------------
+
+-- ひらがな変換を行うなら true , 行わない（常にアルファベットのまま）なら false を設定
+-- 設定が true でも、ノートの言語設定が日本語でない時と歌詞が . から始まるときはひらがな変換は行われない
+-- グループ/トラックの設定が英語でもノートごとの設定がデフォルトのままならひらがな変換はこの設定に従う
 local USE_HIRAGANA = true
 
+-- 画面の移動時、画面端からどれだけ余裕を持たせるか（0.1なら画面幅の10%以上を開ける）
+-- デフォルト設定は 0.1
 local VIEW_TOLERANCE = 0.1
 
+-- 歌詞入力対象のノートを次に飛ばす条件の文字
+-- デフォルト設定は "\\x80-\\xBF+-" で、これはひらがなと+、-が最後にあるノートは飛ばす設定
 local LYRIC_END = "\\x80-\\xBF+-"
+
+-- 非ひらがな入力時、次のノートに飛ばす文字
+-- デフォルト設定は "/" 、英語ノートを書いている時とかはhello/ とか打つと次のノートに移動できる
 local NEXT_NOTE_CHAR = "/"
+
+-- 特例的に前のノートに滑り込むキー
+-- デフォルト設定は { "l", "x", "`" } 、例えば[tilya]と入力した時、lが前のノートに滑り込むため一つのノートに「ちゃ」と入力される
 local SLIDE_KEYS = { "l", "x", "`" }
 
+-- このスクリプトのあるフォルダへのフルパス、設定しなくてもスクリプトは使えるが、initの実行時には必要
+-- バックスラッシュにはエスケープが要るため、Windowsの場合 C:\\User\\〜 のようになる
+-- Macならデフォルトのままで良い
 local SCRIPT_DIR_PATH = "/Library/Application Support/Dreamtonics/Synthesizer V Studio/scripts/direct-lyric-input"
+
+-- ファイル名まわり 触らないで良い
 local OUTPUT_DIR_NAME = "output"
 local TEMPLATES_DIR_NAME = "templates"
 local TEMPLATE_FILE_EXT = ".txt"
@@ -14,6 +36,9 @@ local INPUT_TEMPLATE = "input"
 local OTHER_TEMPLATES = { "lyricClear", "lyricClearAll" }
 local PATH_SEPS = { Windows = "\\", macOS = "/", Linux = "/", Unknown = "/" }
 
+-- 以下はスクリプト生成用のテンプレート
+-- 例えば9にも対応させるときは { KEY = "9", KEY_NAME = "9" }, を追加してinitを実行し、エディタからショートカットを割り当てる
+-- KEYは入力される文字、KEY_NAMEはスクリプトファイル名
 ---@type { KEY: string, KEY_NAME: string }[]
 local KEYS_LIST = {
   { KEY = "a", KEY_NAME =  "A" },
@@ -49,6 +74,8 @@ local KEYS_LIST = {
   { KEY = "/", KEY_NAME =  "_slash" },
 }
 
+-- ひらがな変換用のルール 変換時はルールが長いものを優先する（a より kaを優先）
+-- 例えば「cl」→「っ」を追加したければ cl = { "っ" }, を追加してinitを実行する
 ---@type table<string, string[]>
 local KANA_RULES = {
   a = { "あ" }, i = { "い" }, u = { "う" }, e = { "え" }, o = { "お" },
@@ -121,7 +148,7 @@ local KANA_RULES = {
 }
 
 ----------------------------------------------
---- 以下init処理
+--- 設定用ここまで
 ----------------------------------------------
 
 ---@diagnostic disable-next-line: lowercase-global

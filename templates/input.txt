@@ -1,4 +1,5 @@
 local KEY = __KEY__
+local KEY_NAME = __KEY_NAME__
 local KEY_LENGHT = __KEY_LENGHT__
 local KANA_RULES = __KANA_RULES__
 local SLIDE_KEYS_SET = __SLIDE_KEYS_SET__
@@ -10,7 +11,7 @@ local USE_HIRAGANA = __USE_HIRAGANA__
 ---@diagnostic disable-next-line: lowercase-global
 function getClientInfo()
   return {
-    name = "DLIn: key-" .. __KEY_NAME__,
+    name = "DLIn: key-" .. KEY_NAME,
     category = "Direct Lyric Input",
     author = "fanta",
     versionNumber = 1,
