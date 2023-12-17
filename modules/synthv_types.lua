@@ -76,7 +76,7 @@ function getClientInfo() end
 ---@field T fun(s: self, text: string): string
 
 ---@class (exact) HostInfo
----@field osType string "Windows", "macOS", "Linux", "Unknown" のいずれか
+---@field osType "Windows" | "macOS" | "Linux" | "Unknown" "Windows", "macOS", "Linux", "Unknown" のいずれか
 ---@field osName string オペレーティングシステムの完全な名前
 ---@field hostName string "Synthesizer V Studio Pro" あるいは "Synthesizer V Studio Basic"
 ---@field hostVersion string Synthesizer V Studio のバージョン文字列。例： "1.0.4"

@@ -1,7 +1,7 @@
-local KEY = "v"
-local KEY_NAME = "V"
+local KEY = "__KEY__"
+local KEY_NAME = "__KEY_NAME__"
 
-package.path = '/Library/Application Support/Dreamtonics/Synthesizer V Studio/scripts/direct-lyric-input/modules/?.lua'
+package.path = "__PACKAGE_PATH__"
 local commons = require('commons')
 
 ---@diagnostic disable-next-line: lowercase-global

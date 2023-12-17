@@ -40,3 +40,5 @@ function main()
 
   return SV:finish()
 end
+
+return { test = "test" }
