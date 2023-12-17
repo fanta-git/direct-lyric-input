@@ -1,28 +1,11 @@
-local DIR_NAME = "direct-lyric-input"
+local SCRIPT_DIR_PATH = "/Library/Application Support/Dreamtonics/Synthesizer V Studio/scripts/direct-lyric-input"
 local OUTPUT_DIR_NAME = "output"
 local TEMPLATES_DIR_NAME = "templates"
 local MODULES_DIR_NAME = "modules"
 local TEMPLATE_FILE_EXT = ".txt"
 local INPUT_TEMPLATE = "input"
 local OTHER_TEMPLATES = { "lyricClear", "lyricClearAll" }
-local PATH_SETS = {
-  Windows = {
-    default = "C:\\User\\username\\Documents\\Dreamtonics\\Synthesizer V Studio\\scripts",
-    sep = "\\"
-  },
-  macOS = {
-    default = "/Library/Application Support/Dreamtonics/Synthesizer V Studio/scripts",
-    sep = "/"
-  },
-  Linux = {
-    default = "",
-    sep = "/"
-  },
-  Unknown = {
-    default = "",
-    sep = "/"
-  }
-}
+local PATH_SEPS = { Windows = "\\", macOS = "/", Linux = "/", Unknown = "/" }
 
 ---@type { KEY: string, KEY_NAME: string }[]
 local KEYS_LIST = {
@@ -106,23 +89,22 @@ end
 ---@diagnostic disable-next-line: lowercase-global
 function main()
   local ostype = SV:getHostInfo().osType
-  local scriptDirPath = SV:showInputBox("ファイルパス入力", "スクリプトファイルのファイルパスを入力して下さい", PATH_SETS[ostype].default)
   local packagePath = table.concat(
-    { scriptDirPath, DIR_NAME, MODULES_DIR_NAME, "?.lua" },
-    PATH_SETS[ostype].sep
+    { SCRIPT_DIR_PATH, MODULES_DIR_NAME, "?.lua" },
+    PATH_SEPS[ostype]
   )
 
   local keysTemplatePath = table.concat(
-    { scriptDirPath, DIR_NAME, TEMPLATES_DIR_NAME, INPUT_TEMPLATE .. TEMPLATE_FILE_EXT },
-    PATH_SETS[ostype].sep
+    { SCRIPT_DIR_PATH, TEMPLATES_DIR_NAME, INPUT_TEMPLATE .. TEMPLATE_FILE_EXT },
+    PATH_SEPS[ostype]
   )
   local keysTemplate = readFile(keysTemplatePath)
   if keysTemplate then
     for _, key in ipairs(KEYS_LIST) do
       local keyName = "input-" .. key.KEY_NAME
       local keyPath = table.concat(
-        { scriptDirPath, DIR_NAME, OUTPUT_DIR_NAME, keyName .. ".lua" },
-        PATH_SETS[ostype].sep
+        { SCRIPT_DIR_PATH, OUTPUT_DIR_NAME, keyName .. ".lua" },
+        PATH_SEPS[ostype]
       )
 
       writeTemplate(keyPath, keysTemplate, {
@@ -135,14 +117,14 @@ function main()
 
   for _, templateName in ipairs(OTHER_TEMPLATES) do
     local templatePath = table.concat(
-      { scriptDirPath, DIR_NAME, TEMPLATES_DIR_NAME, templateName .. TEMPLATE_FILE_EXT },
-      PATH_SETS[ostype].sep
+      { SCRIPT_DIR_PATH, TEMPLATES_DIR_NAME, templateName .. TEMPLATE_FILE_EXT },
+      PATH_SEPS[ostype]
     )
     local template = readFile(templatePath)
     if template then
       local outputPath = table.concat(
-        { scriptDirPath, DIR_NAME, OUTPUT_DIR_NAME, templateName .. ".lua" },
-        PATH_SETS[ostype].sep
+        { SCRIPT_DIR_PATH, OUTPUT_DIR_NAME, templateName .. ".lua" },
+        PATH_SEPS[ostype]
       )
       writeTemplate(outputPath, template, {
         PACKAGE_PATH = packagePath
