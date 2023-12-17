@@ -3,8 +3,8 @@ local OUTPUT_DIR_NAME = "output"
 local TEMPLATES_DIR_NAME = "templates"
 local MODULES_DIR_NAME = "modules"
 local TEMPLATE_FILE_EXT = ".txt"
-local KEY_TEMPLATE = "keysTemplate"
-local OTHER_TEMPLATES = { "lyricClear.lua", "lyricClearAll.lua" }
+local INPUT_TEMPLATE = "input"
+local OTHER_TEMPLATES = { "lyricClear", "lyricClearAll" }
 local PATH_SETS = {
   Windows = {
     default = "C:\\User\\username\\Documents\\Dreamtonics\\Synthesizer V Studio\\scripts",
@@ -107,9 +107,13 @@ end
 function main()
   local ostype = SV:getHostInfo().osType
   local scriptDirPath = SV:showInputBox("ファイルパス入力", "スクリプトファイルのファイルパスを入力して下さい", PATH_SETS[ostype].default)
+  local packagePath = table.concat(
+    { scriptDirPath, DIR_NAME, MODULES_DIR_NAME, "?.lua" },
+    PATH_SETS[ostype].sep
+  )
 
   local keysTemplatePath = table.concat(
-    { scriptDirPath, DIR_NAME, TEMPLATES_DIR_NAME, KEY_TEMPLATE .. TEMPLATE_FILE_EXT },
+    { scriptDirPath, DIR_NAME, TEMPLATES_DIR_NAME, INPUT_TEMPLATE .. TEMPLATE_FILE_EXT },
     PATH_SETS[ostype].sep
   )
   local keysTemplate = readFile(keysTemplatePath)
@@ -120,15 +124,29 @@ function main()
         { scriptDirPath, DIR_NAME, OUTPUT_DIR_NAME, keyName .. ".lua" },
         PATH_SETS[ostype].sep
       )
-      local vars = {
+
+      writeTemplate(keyPath, keysTemplate, {
         KEY = key.KEY,
         KEY_NAME = key.KEY_NAME,
-        PACKAGE_PATH = table.concat(
-          { scriptDirPath, DIR_NAME, MODULES_DIR_NAME, "?.lua" },
-          PATH_SETS[ostype].sep
-        )
-      }
-      writeTemplate(keyPath, keysTemplate, vars)
+        PACKAGE_PATH = packagePath
+      })
+    end
+  end
+
+  for _, templateName in ipairs(OTHER_TEMPLATES) do
+    local templatePath = table.concat(
+      { scriptDirPath, DIR_NAME, TEMPLATES_DIR_NAME, templateName .. TEMPLATE_FILE_EXT },
+      PATH_SETS[ostype].sep
+    )
+    local template = readFile(templatePath)
+    if template then
+      local outputPath = table.concat(
+        { scriptDirPath, DIR_NAME, OUTPUT_DIR_NAME, templateName .. ".lua" },
+        PATH_SETS[ostype].sep
+      )
+      writeTemplate(outputPath, template, {
+        PACKAGE_PATH = packagePath
+      })
     end
   end
 
