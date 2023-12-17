@@ -2,7 +2,7 @@ local KEY = __KEY__
 local KEY_NAME = __KEY_NAME__
 local KEY_LENGHT = __KEY_LENGHT__
 local KANA_RULES = __KANA_RULES__
-local SLIDE_KEYS_SET = __SLIDE_KEYS_SET__
+local IS_SLIDE_KEY = __IS_SLIDE_KEY__
 local LYRIC_END_PATTERN = __LYRIC_END_PATTERN__
 local NEXT_NOTE_CHAR = __NEXT_NOTE_CHAR__
 local VIEW_TOLERANCE = __VIEW_TOLERANCE__
@@ -119,7 +119,6 @@ local function getTargetNote(noteGroup, key)
     return nil, -1, ""
   end
 
-  local noSlide = SLIDE_KEYS_SET[key] == nil
   local targetNote, targetNoteIndex = arrayFind(noteGroup, function (note)
     return note:getLyrics() == ""
   end)
@@ -137,7 +136,7 @@ local function getTargetNote(noteGroup, key)
   local prevLyric = prevNote:getLyrics()
   local prevLyricNormalized = noteLyricNormalize(prevNote, prevLyric)
 
-  if noSlide and prevLyric:find(LYRIC_END_PATTERN) then
+  if not IS_SLIDE_KEY and prevLyric:find(LYRIC_END_PATTERN) then
     return targetNote, targetNoteIndex, ""
   end
 

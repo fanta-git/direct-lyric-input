@@ -332,3 +332,5 @@ function getClientInfo() end
 ---@class (exact) WidgetAnswers
 ---@field status YesNoCancelAnswer | boolean ダイアログのボタンに対する値。
 ---@field answers table<string, string | number | boolean> ウィジェットの名前と値のペアのテーブル。
+
+SV = ({} --[[@as SV]])

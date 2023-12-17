@@ -235,25 +235,36 @@ end
 
 ---@diagnostic disable-next-line: lowercase-global
 function main()
-  local check = {}
-  for k in pairs(KANA_RULES) do
-      check[#k] = true
+  local kanaRulesMap = {}
+  local checkMap = {}
+  for k, v in pairs(KANA_RULES) do
+    local lastChar = k:sub(-1)
+    kanaRulesMap[lastChar] = kanaRulesMap[lastChar] or {}
+    kanaRulesMap[lastChar][k] = v
+
+    checkMap[lastChar] = checkMap[lastChar] or {}
+    checkMap[lastChar][#k] = true
   end
 
-  local KEY_LENGHT = {}
-  for k in pairs(check) do
-    table.insert(KEY_LENGHT, k)
+  local kanaKeyLengthMap = {}
+  for k, v in pairs(checkMap) do
+    local keylength = {}
+    kanaKeyLengthMap[k] = keylength
+
+    for l in pairs(v) do
+      table.insert(keylength, l)
+    end
+
+    table.sort(keylength, function (a, b)
+      return a > b
+    end)
   end
-  table.sort(KEY_LENGHT, function (a, b)
-    return a > b
-  end)
+
   local SLIDE_KEYS_SET = {}
   for _, key in ipairs(SLIDE_KEYS) do
     SLIDE_KEYS_SET[key] = true
   end
 
-  local KANA_RULES_STR = tableToString(KANA_RULES, arrayToString)
-  local KEY_LENGHT_STR = arrayToString(KEY_LENGHT)
   local LYRIC_END_PATTERN = "[" .. NEXT_NOTE_CHAR .. LYRIC_END .. "]$"
   local SLIDE_KEYS_SET_STR = tableToString(SLIDE_KEYS_SET)
 
@@ -274,9 +285,9 @@ function main()
       writeTemplate(keyPath, keysTemplate, {
         KEY = primitiveToString(key.KEY),
         KEY_NAME = primitiveToString(key.KEY_NAME),
-        KEY_LENGHT = KEY_LENGHT_STR,
-        KANA_RULES = KANA_RULES_STR,
-        SLIDE_KEYS_SET = SLIDE_KEYS_SET_STR,
+        KEY_LENGHT = arrayToString(kanaKeyLengthMap[key.KEY] or {}),
+        KANA_RULES = tableToString(kanaRulesMap[key.KEY] or {}, arrayToString),
+        IS_SLIDE_KEY = primitiveToString(SLIDE_KEYS_SET_STR[key.KEY] and true or false),
         LYRIC_END_PATTERN = primitiveToString(LYRIC_END_PATTERN),
         NEXT_NOTE_CHAR = primitiveToString(NEXT_NOTE_CHAR),
         VIEW_TOLERANCE = primitiveToString(VIEW_TOLERANCE),
@@ -290,6 +301,7 @@ function main()
       { SCRIPT_DIR_PATH, TEMPLATES_DIR_NAME, templateName .. TEMPLATE_FILE_EXT },
       PATH_SEPS[ostype]
     )
+
     local template = readFile(templatePath)
     if template then
       local outputPath = table.concat(
@@ -304,7 +316,3 @@ function main()
 
   return SV:finish()
 end
-
-----------------------------------------------
---- 以下モジュール用処理
-----------------------------------------------
