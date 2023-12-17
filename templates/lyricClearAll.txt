@@ -1,6 +1,3 @@
-package.path = "__PACKAGE_PATH__"
-local commons = require("init")
-
 ---@diagnostic disable-next-line: lowercase-global
 function getClientInfo()
   return {
@@ -12,10 +9,26 @@ function getClientInfo()
   }
 end
 
+---ノート配列を親グループのインデックス順にソート（破壊的）
+---@param notes Note[]
+---@return Note[]
+local function sortNotesByIndex(notes)
+  local indexs = {}
+  for _, note in ipairs(notes) do
+    indexs[note] = note:getIndexInParent()
+  end
+
+  table.sort(notes, function (a, b)
+    return indexs[a] < indexs[b]
+  end)
+
+  return notes
+end
+
 ---@diagnostic disable-next-line: lowercase-global
 function main()
   local mainEditor = SV:getMainEditor()
-  local selectionNotes = commons.sortNotesByIndex(mainEditor:getSelection():getSelectedNotes())
+  local selectionNotes = sortNotesByIndex(mainEditor:getSelection():getSelectedNotes())
   if #selectionNotes == 0 then
     return SV:finish()
   end

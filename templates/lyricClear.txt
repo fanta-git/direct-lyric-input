@@ -1,5 +1,4 @@
-package.path = "__PACKAGE_PATH__"
-local commons = require("init")
+local VIEW_TOLERANCE = __VIEW_TOLERANCE__
 
 ---@diagnostic disable-next-line: lowercase-global
 function getClientInfo()
@@ -12,10 +11,50 @@ function getClientInfo()
   }
 end
 
+---ノート配列を親グループのインデックス順にソート（破壊的）
+---@param notes Note[]
+---@return Note[]
+local function sortNotesByIndex(notes)
+  local indexs = {}
+  for _, note in ipairs(notes) do
+    indexs[note] = note:getIndexInParent()
+  end
+
+  table.sort(notes, function (a, b)
+    return indexs[a] < indexs[b]
+  end)
+
+  return notes
+end
+
+---ノートが画面外にある時、収まるように画面を移動する
+---@param mainEditor MainEditorView
+---@param note Note
+local function focusNote(mainEditor, note)
+  local coordinate = mainEditor:getNavigation()
+  local viewRangeHorizontal = coordinate:getTimeViewRange()
+  local viewLeft, viewRight = viewRangeHorizontal[1], viewRangeHorizontal[2]
+  local noteLeft, noteRight = note:getOnset(), note:getEnd()
+
+  local toleranceBlicks = (viewRight - viewLeft) * VIEW_TOLERANCE
+
+  if noteRight < viewLeft + toleranceBlicks or viewRight - toleranceBlicks < noteLeft then
+    coordinate:setTimeLeft(noteLeft - toleranceBlicks)
+  end
+
+  local viewRangeVertical = coordinate:getValueViewRange()
+  local viewBottom, viewTop = viewRangeVertical[1], viewRangeVertical[2]
+  local notePitch = note:getPitch()
+
+  if notePitch < viewBottom or viewTop < notePitch then
+    coordinate:setValueCenter(notePitch)
+  end
+end
+
 ---@diagnostic disable-next-line: lowercase-global
 function main()
   local mainEditor = SV:getMainEditor()
-  local selectedNotes = commons.sortNotesByIndex(mainEditor:getSelection():getSelectedNotes())
+  local selectedNotes = sortNotesByIndex(mainEditor:getSelection():getSelectedNotes())
   if #selectedNotes == 0 then
     return SV:finish()
   end
@@ -27,7 +66,7 @@ function main()
     if lyric ~= "" then
       local subbed = lyric:sub(1, utf8.offset(lyric, -1) - 1)
       note:setLyrics(subbed)
-      commons.focusNote(mainEditor, (subbed == "") and selectedNotes[i - 1] or note)
+      focusNote(mainEditor, (subbed == "") and selectedNotes[i - 1] or note)
 
       return SV:finish()
     end

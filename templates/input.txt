@@ -1,12 +1,16 @@
-local KEY = "__KEY__"
-
-package.path = "__PACKAGE_PATH__"
-local commons = require('init')
+local KEY = __KEY__
+local KEY_LENGHT = __KEY_LENGHT__
+local KANA_RULES = __KANA_RULES__
+local SLIDE_KEYS_SET = __SLIDE_KEYS_SET__
+local LYRIC_END_PATTERN = __LYRIC_END_PATTERN__
+local NEXT_NOTE_CHAR = __NEXT_NOTE_CHAR__
+local VIEW_TOLERANCE = __VIEW_TOLERANCE__
+local USE_HIRAGANA = __USE_HIRAGANA__
 
 ---@diagnostic disable-next-line: lowercase-global
 function getClientInfo()
   return {
-    name = "DLIn: key-__KEY_NAME__",
+    name = "DLIn: key-" .. __KEY_NAME__,
     category = "Direct Lyric Input",
     author = "fanta",
     versionNumber = 1,
@@ -14,24 +18,149 @@ function getClientInfo()
   }
 end
 
+---ローマ字列の最後をひらがなに変換
+---@param romaji string
+---@return string, string | nil
+local function convertRomaji(romaji)
+  for _, i in ipairs(KEY_LENGHT) do
+    if i <= #romaji then
+      local to = KANA_RULES[romaji:sub(-i)]
+
+      if to then
+        return romaji:sub(1, ~i) .. to[1], to[2]
+      end
+    end
+  end
+  return romaji
+end
+
+---歌詞のスクリプト用文字を変換・削除
+---@param note Note
+---@param lyric string?
+---@return string
+local function noteLyricNormalize(note, lyric)
+  lyric = lyric or note:getLyrics()
+  local lastChar = lyric:sub(-1)
+
+  if lastChar == "." and #lyric > 1 then
+    local fixedLyric = lyric:sub(1, -2) .. " "
+    note:setLyrics(fixedLyric)
+    return fixedLyric
+  elseif lastChar == NEXT_NOTE_CHAR then
+    local fixedLyric = lyric:sub(1, -2)
+    note:setLyrics(fixedLyric)
+    return fixedLyric
+  end
+
+  return lyric
+end
+
+---ノート配列を親グループのインデックス順にソート（破壊的）
+---@param notes Note[]
+---@return Note[]
+local function sortNotesByIndex(notes)
+  local indexs = {}
+  for _, note in ipairs(notes) do
+    indexs[note] = note:getIndexInParent()
+  end
+
+  table.sort(notes, function (a, b)
+    return indexs[a] < indexs[b]
+  end)
+
+  return notes
+end
+
+---ノートが画面外にある時、収まるように画面を移動する
+---@param mainEditor MainEditorView
+---@param note Note
+local function focusNote(mainEditor, note)
+  local coordinate = mainEditor:getNavigation()
+  local viewRangeHorizontal = coordinate:getTimeViewRange()
+  local viewLeft, viewRight = viewRangeHorizontal[1], viewRangeHorizontal[2]
+  local noteLeft, noteRight = note:getOnset(), note:getEnd()
+
+  local toleranceBlicks = (viewRight - viewLeft) * VIEW_TOLERANCE
+
+  if noteRight < viewLeft + toleranceBlicks or viewRight - toleranceBlicks < noteLeft then
+    coordinate:setTimeLeft(noteLeft - toleranceBlicks)
+  end
+
+  local viewRangeVertical = coordinate:getValueViewRange()
+  local viewBottom, viewTop = viewRangeVertical[1], viewRangeVertical[2]
+  local notePitch = note:getPitch()
+
+  if notePitch < viewBottom or viewTop < notePitch then
+    coordinate:setValueCenter(notePitch)
+  end
+end
+
+---@generic T
+---@param arr T[]
+---@param callback fun(v: T, i: number, self: T[]): boolean
+---@return T | nil, number
+local function arrayFind(arr, callback)
+  for i, v in ipairs(arr) do
+    if callback(v, i, arr) then
+      return v, i
+    end
+  end
+
+  return nil, -1
+end
+
+---歌詞が完全に入力されていない最初のノートを取得
+---@param noteGroup Note[]
+---@param key string
+---@return Note | nil, number, string
+local function getTargetNote(noteGroup, key)
+  if #noteGroup == 0 then
+    return nil, -1, ""
+  end
+
+  local noSlide = SLIDE_KEYS_SET[key] == nil
+  local targetNote, targetNoteIndex = arrayFind(noteGroup, function (note)
+    return note:getLyrics() == ""
+  end)
+
+  if targetNote == nil then
+    return noteGroup[#noteGroup], #noteGroup, noteLyricNormalize(noteGroup[#noteGroup])
+  end
+
+  if targetNoteIndex <= 1 then
+    return targetNote, targetNoteIndex, ""
+  end
+
+  local prevIndex = targetNoteIndex - 1
+  local prevNote = noteGroup[prevIndex]
+  local prevLyric = prevNote:getLyrics()
+  local prevLyricNormalized = noteLyricNormalize(prevNote, prevLyric)
+
+  if noSlide and prevLyric:find(LYRIC_END_PATTERN) then
+    return targetNote, targetNoteIndex, ""
+  end
+
+  return prevNote, prevIndex, prevLyricNormalized
+end
+
 ---@diagnostic disable-next-line: lowercase-global
 function main()
   local mainEditor = SV:getMainEditor()
   local selection = mainEditor:getSelection()
-  local selectedNotes = commons.sortNotesByIndex(selection:getSelectedNotes())
-  local firstNote, noteIndex, lyric = commons.getTargetNote(selectedNotes, KEY)
+  local selectedNotes = sortNotesByIndex(selection:getSelectedNotes())
+  local firstNote, noteIndex, lyric = getTargetNote(selectedNotes, KEY)
   if firstNote == nil then
     return SV:finish()
   end
 
-  commons.focusNote(mainEditor, firstNote)
+  focusNote(mainEditor, firstNote)
 
   local noteLanguageOverride = firstNote:getLanguageOverride()
-  local wouldConvert = noteLanguageOverride == "" and commons.USE_HIRAGANA or noteLanguageOverride == "japanese"
+  local wouldConvert = noteLanguageOverride == "" and USE_HIRAGANA or noteLanguageOverride == "japanese"
   local isLyricMode = lyric:sub(1, 1) ~= "."
 
   if wouldConvert and isLyricMode then
-    local inputedLyrics, nextLyrics = commons.convertRomaji(lyric .. KEY)
+    local inputedLyrics, nextLyrics = convertRomaji(lyric .. KEY)
 
     if nextLyrics then
       local nextNote = selectedNotes[noteIndex + 1]

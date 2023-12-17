@@ -2,7 +2,7 @@ local USE_HIRAGANA = true
 
 local VIEW_TOLERANCE = 0.1
 
-local LYRIC_END = "\x80-\xBF+-"
+local LYRIC_END = "\\x80-\\xBF+-"
 local NEXT_NOTE_CHAR = "/"
 local SLIDE_KEYS = { "l", "x", "`" }
 
@@ -135,6 +135,44 @@ function getClientInfo()
   }
 end
 
+---プリミティブ値を文字列に変換
+---@param from any
+---@return string
+local function primitiveToString(from)
+  if type(from) == "string" then
+    return '"' .. from .. '"'
+  end
+  return tostring(from)
+end
+
+---配列を文字列に変換
+---@generic T
+---@param from T[]
+---@param convertFunc? fun(val: T): any
+---@return string
+local function arrayToString(from, convertFunc)
+  local arr = {}
+  for _, v in ipairs(from) do
+    local str = (convertFunc or primitiveToString)(v)
+    table.insert(arr, str)
+  end
+  return "{" .. table.concat(arr, ",") .. "}"
+end
+
+---連想配列を文字列に変換
+---@generic T
+---@param from table<any, T>
+---@param convertFunc? fun(val: T): string
+---@return string
+local function tableToString(from, convertFunc)
+  local arr = {}
+  for k, v in pairs(from) do
+    local str = (convertFunc or primitiveToString)(v)
+    table.insert(arr, ('["%s"]=%s'):format(k, str))
+  end
+  return "{" .. table.concat(arr, ",") .. "}"
+end
+
 ---ファイルを読み込む
 ---@param path string ファイルのパス
 ---@return string[] | nil # ファイルが存在しない場合はnil
@@ -156,7 +194,7 @@ end
 ---テンプレートを元にスクリプトファイルを生成
 ---@param path string 生成するスクリプトファイルのパス
 ---@param template string[] テンプレートファイルの内容
----@param vars table テンプレートファイル内の変数を置換する文字列のテーブル
+---@param vars table<string, string> テンプレートファイル内の変数を置換する文字列のテーブル
 local function writeTemplate(path, template, vars)
   local file = io.open(path, "w") --[[@as file*]]
   for _, line in ipairs(template) do
@@ -170,12 +208,29 @@ end
 
 ---@diagnostic disable-next-line: lowercase-global
 function main()
-  local ostype = SV:getHostInfo().osType
-  local packagePath = table.concat(
-    { SCRIPT_DIR_PATH, "?.lua" },
-    PATH_SEPS[ostype]
-  )
+  local check = {}
+  for k in pairs(KANA_RULES) do
+      check[#k] = true
+  end
 
+  local KEY_LENGHT = {}
+  for k in pairs(check) do
+    table.insert(KEY_LENGHT, k)
+  end
+  table.sort(KEY_LENGHT, function (a, b)
+    return a > b
+  end)
+  local SLIDE_KEYS_SET = {}
+  for _, key in ipairs(SLIDE_KEYS) do
+    SLIDE_KEYS_SET[key] = true
+  end
+
+  local KANA_RULES_STR = tableToString(KANA_RULES, arrayToString)
+  local KEY_LENGHT_STR = arrayToString(KEY_LENGHT)
+  local LYRIC_END_PATTERN = "[" .. NEXT_NOTE_CHAR .. LYRIC_END .. "]$"
+  local SLIDE_KEYS_SET_STR = tableToString(SLIDE_KEYS_SET)
+
+  local ostype = SV:getHostInfo().osType
   local keysTemplatePath = table.concat(
     { SCRIPT_DIR_PATH, TEMPLATES_DIR_NAME, INPUT_TEMPLATE .. TEMPLATE_FILE_EXT },
     PATH_SEPS[ostype]
@@ -190,9 +245,15 @@ function main()
       )
 
       writeTemplate(keyPath, keysTemplate, {
-        KEY = key.KEY,
-        KEY_NAME = key.KEY_NAME,
-        PACKAGE_PATH = packagePath
+        KEY = primitiveToString(key.KEY),
+        KEY_NAME = primitiveToString(key.KEY_NAME),
+        KEY_LENGHT = KEY_LENGHT_STR,
+        KANA_RULES = KANA_RULES_STR,
+        SLIDE_KEYS_SET = SLIDE_KEYS_SET_STR,
+        LYRIC_END_PATTERN = primitiveToString(LYRIC_END_PATTERN),
+        NEXT_NOTE_CHAR = primitiveToString(NEXT_NOTE_CHAR),
+        VIEW_TOLERANCE = primitiveToString(VIEW_TOLERANCE),
+        USE_HIRAGANA = primitiveToString(USE_HIRAGANA),
       })
     end
   end
@@ -209,7 +270,7 @@ function main()
         PATH_SEPS[ostype]
       )
       writeTemplate(outputPath, template, {
-        PACKAGE_PATH = packagePath
+        VIEW_TOLERANCE = primitiveToString(VIEW_TOLERANCE),
       })
     end
   end
@@ -220,155 +281,3 @@ end
 ----------------------------------------------
 --- 以下モジュール用処理
 ----------------------------------------------
-
-local check = {}
-for k in pairs(KANA_RULES) do
-    check[#k] = true
-end
-
-local KEY_LENGHT = {}
-for k in pairs(check) do
-  table.insert(KEY_LENGHT, k)
-end
-table.sort(KEY_LENGHT, function (a, b)
-  return a > b
-end)
-
-local LYRIC_END_PATTERN = "[" .. NEXT_NOTE_CHAR .. LYRIC_END .. "]$"
-local SLIDE_KEYS_SET = {}
-for _, key in ipairs(SLIDE_KEYS) do
-  SLIDE_KEYS_SET[key] = true
-end
-
----ローマ字列の最後をひらがなに変換
----@param romaji string
----@return string, string | nil
-local function convertRomaji(romaji)
-  for _, i in ipairs(KEY_LENGHT) do
-    if i <= #romaji then
-      local to = KANA_RULES[romaji:sub(-i)]
-
-      if to then
-        return romaji:sub(1, ~i) .. to[1], to[2]
-      end
-    end
-  end
-  return romaji
-end
-
----歌詞のスクリプト用文字を変換・削除
----@param note Note
----@param lyric string?
----@return string
-local function noteLyricNormalize(note, lyric)
-  lyric = lyric or note:getLyrics()
-  local lastChar = lyric:sub(-1)
-
-  if lastChar == "." and #lyric > 1 then
-    local fixedLyric = lyric:sub(1, -2) .. " "
-    note:setLyrics(fixedLyric)
-    return fixedLyric
-  elseif lastChar == NEXT_NOTE_CHAR then
-    local fixedLyric = lyric:sub(1, -2)
-    note:setLyrics(fixedLyric)
-    return fixedLyric
-  end
-
-  return lyric
-end
-
----ノート配列を親グループのインデックス順にソート（破壊的）
----@param notes Note[]
----@return Note[]
-local function sortNotesByIndex(notes)
-  local indexs = {}
-  for _, note in ipairs(notes) do
-    indexs[note] = note:getIndexInParent()
-  end
-
-  table.sort(notes, function (a, b)
-    return indexs[a] < indexs[b]
-  end)
-
-  return notes
-end
-
----ノートが画面外にある時、収まるように画面を移動する
----@param mainEditor MainEditorView
----@param note Note
-local function focusNote(mainEditor, note)
-  local coordinate = mainEditor:getNavigation()
-  local viewRangeHorizontal = coordinate:getTimeViewRange()
-  local viewLeft, viewRight = viewRangeHorizontal[1], viewRangeHorizontal[2]
-  local noteLeft, noteRight = note:getOnset(), note:getEnd()
-
-  local toleranceBlicks = (viewRight - viewLeft) * VIEW_TOLERANCE
-
-  if noteRight < viewLeft + toleranceBlicks or viewRight - toleranceBlicks < noteLeft then
-    coordinate:setTimeLeft(noteLeft - toleranceBlicks)
-  end
-
-  local viewRangeVertical = coordinate:getValueViewRange()
-  local viewBottom, viewTop = viewRangeVertical[1], viewRangeVertical[2]
-  local notePitch = note:getPitch()
-
-  if notePitch < viewBottom or viewTop < notePitch then
-    coordinate:setValueCenter(notePitch)
-  end
-end
-
----@generic T
----@param arr T[]
----@param callback fun(v: T, i: number, self: T[]): boolean
----@return T | nil, number
-local function arrayFind(arr, callback)
-  for i, v in ipairs(arr) do
-    if callback(v, i, arr) then
-      return v, i
-    end
-  end
-
-  return nil, -1
-end
-
----歌詞が完全に入力されていない最初のノートを取得
----@param noteGroup Note[]
----@param key string
----@return Note | nil, number, string
-local function getTargetNote(noteGroup, key)
-  if #noteGroup == 0 then
-    return nil, -1, ""
-  end
-
-  local noSlide = SLIDE_KEYS_SET[key] == nil
-  local targetNote, targetNoteIndex = arrayFind(noteGroup, function (note)
-    return note:getLyrics() == ""
-  end)
-
-  if targetNote == nil then
-    return noteGroup[#noteGroup], #noteGroup, noteLyricNormalize(noteGroup[#noteGroup])
-  end
-
-  if targetNoteIndex <= 1 then
-    return targetNote, targetNoteIndex, ""
-  end
-
-  local prevIndex = targetNoteIndex - 1
-  local prevNote = noteGroup[prevIndex]
-  local prevLyric = prevNote:getLyrics()
-  local prevLyricNormalized = noteLyricNormalize(prevNote, prevLyric)
-
-  if noSlide and prevLyric:find(LYRIC_END_PATTERN) then
-    return targetNote, targetNoteIndex, ""
-  end
-
-  return prevNote, prevIndex, prevLyricNormalized
-end
-
-return {
-  getTargetNote = getTargetNote,
-  sortNotesByIndex = sortNotesByIndex,
-  convertRomaji = convertRomaji,
-  focusNote = focusNote,
-  USE_HIRAGANA = USE_HIRAGANA,
-}
