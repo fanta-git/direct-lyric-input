@@ -1,5 +1,5 @@
 package.path = "__PACKAGE_PATH__"
-local commons = require("commons")
+local commons = require("init")
 
 ---@diagnostic disable-next-line: lowercase-global
 function getClientInfo()
@@ -40,5 +40,3 @@ function main()
 
   return SV:finish()
 end
-
-return { test = "test" }

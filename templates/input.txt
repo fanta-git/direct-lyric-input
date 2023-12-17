@@ -1,11 +1,53 @@
 local KEY = "__KEY__"
-local KEY_NAME = "__KEY_NAME__"
 
 package.path = "__PACKAGE_PATH__"
-local commons = require('commons')
+local commons = require('init')
 
 ---@diagnostic disable-next-line: lowercase-global
-getClientInfo = commons.keysClientInfo(KEY_NAME)
+function getClientInfo()
+  return {
+    name = "DLIn: key-__KEY_NAME__",
+    category = "Direct Lyric Input",
+    author = "fanta",
+    versionNumber = 1,
+    minEditorVersion = 65540
+  }
+end
 
 ---@diagnostic disable-next-line: lowercase-global
-main = commons.keysMain(KEY)
+function main()
+  local mainEditor = SV:getMainEditor()
+  local selection = mainEditor:getSelection()
+  local selectedNotes = commons.sortNotesByIndex(selection:getSelectedNotes())
+  local firstNote, noteIndex, lyric = commons.getTargetNote(selectedNotes, KEY)
+  if firstNote == nil then
+    return SV:finish()
+  end
+
+  commons.focusNote(mainEditor, firstNote)
+
+  local noteLanguageOverride = firstNote:getLanguageOverride()
+  local wouldConvert = noteLanguageOverride == "" and commons.USE_HIRAGANA or noteLanguageOverride == "japanese"
+  local isLyricMode = lyric:sub(1, 1) ~= "."
+
+  if wouldConvert and isLyricMode then
+    local inputedLyrics, nextLyrics = commons.convertRomaji(lyric .. KEY)
+
+    if nextLyrics then
+      local nextNote = selectedNotes[noteIndex + 1]
+
+      if nextNote and nextNote:getLyrics() == "" then
+        nextNote:setLyrics(nextLyrics)
+      else
+        inputedLyrics = inputedLyrics .. nextLyrics
+      end
+    end
+
+    firstNote:setLyrics(inputedLyrics)
+  else
+    firstNote:setLyrics(lyric .. KEY)
+  end
+
+  return SV:finish()
+end
+
