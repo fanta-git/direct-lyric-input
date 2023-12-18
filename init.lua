@@ -22,9 +22,9 @@ local LYRIC_END = "\\x80-\\xBF+%-"
 -- デフォルト設定は "/" 、英語ノートを書いている時とかはhello/ とか打つと次のノートに移動できる
 local NEXT_NOTE_CHAR = "/"
 
--- 特例的に前のノートに滑り込むキー
--- デフォルト設定は { "l", "x", "`" } 、例えば[tilya]と入力した時、lが前のノートに滑り込むため一つのノートに「ちゃ」と入力される
-local SLIDE_KEYS = { "l", "x", "`" }
+-- 文頭に来るときは前のノートに移動する文字
+-- 例えば[tuxa]と入力した時、ぁが前のノートに滑り込むため一つのノートに「つぁ」と入力される
+local SLIDE_CHARS = { "ゃ", "ゅ", "ょ", "ぁ", "ぃ", "ぅ", "ぇ", "ぉ", "`" }
 
 -- このスクリプトのあるフォルダへのフルパス、設定しなくてもスクリプトは使えるが、initの実行時には必要
 -- バックスラッシュにはエスケープが要るため、Windowsの場合 C:\\User\\〜 のようになる
@@ -268,13 +268,7 @@ function main()
     end)
   end
 
-  local SLIDE_KEYS_SET = {}
-  for _, key in ipairs(SLIDE_KEYS) do
-    SLIDE_KEYS_SET[key] = true
-  end
-
   local LYRIC_END_PATTERN = "[" .. NEXT_NOTE_CHAR .. LYRIC_END .. "]$"
-  local SLIDE_KEYS_SET_STR = tableToString(SLIDE_KEYS_SET)
 
   local ostype = SV:getHostInfo().osType
   local keysTemplatePath = table.concat(
@@ -298,7 +292,7 @@ function main()
       KEY_NAME = primitiveToString(key.KEY_NAME),
       KEY_LENGHT = arrayToString(kanaKeyLengthMap[key.KEY] or {}),
       KANA_RULES = tableToString(kanaRulesMap[key.KEY] or {}, arrayToString),
-      IS_SLIDE_KEY = primitiveToString(SLIDE_KEYS_SET_STR[key.KEY] and true or false),
+      SLIDE_CHARS = arrayToString(SLIDE_CHARS),
       LYRIC_END_PATTERN = primitiveToString(LYRIC_END_PATTERN),
       NEXT_NOTE_CHAR = primitiveToString(NEXT_NOTE_CHAR),
       VIEW_TOLERANCE = primitiveToString(VIEW_TOLERANCE),

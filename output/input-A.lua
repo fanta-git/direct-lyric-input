@@ -1,9 +1,9 @@
 local KEY = "a"
 local KEY_NAME = "A"
 local KEY_LENGHT = {3,2,1}
-local KANA_RULES = {["rya"]={"りゃ"},["pya"]={"ぴゃ"},["lwa"]={"ゎ"},["mya"]={"みゃ"},["lya"]={"ゃ"},["kya"]={"きゃ"},["xwa"]={"ゎ"},["xya"]={"ゃ"},["twa"]={"とぁ"},["swa"]={"すぁ"},["tya"]={"ちゃ"},["sya"]={"しゃ"},["bya"]={"びゃ"},["hwa"]={"ふぁ"},["gwa"]={"ぐぁ"},["hya"]={"ひゃ"},["gya"]={"ぎゃ"},["dwa"]={"どぁ"},["fwa"]={"ふぁ"},["cya"]={"ちゃ"},["cha"]={"ちゃ"},["da"]={"だ"},["fa"]={"ふぁ"},["zya"]={"じゃ"},["tha"]={"てゃ"},["sha"]={"しゃ"},["ba"]={"ば"},["ka"]={"か"},["la"]={"ぁ"},["ma"]={"ま"},["na"]={"な"},["ga"]={"が"},["ha"]={"は"},["vya"]={"ゔゃ"},["ja"]={"じゃ"},["sa"]={"さ"},["ta"]={"た"},["tsa"]={"つぁ"},["va"]={"ゔぁ"},["dha"]={"でゃ"},["pa"]={"ぱ"},["a"]={"あ"},["ra"]={"ら"},["dya"]={"ぢゃ"},["jya"]={"じゃ"},["kwa"]={"くぁ"},["nya"]={"にゃ"},["wa"]={"わ"},["xa"]={"ぁ"},["ya"]={"や"},["za"]={"ざ"}}
-local IS_SLIDE_KEY = false
-local LYRIC_END_PATTERN = "[/\x80-\xBF+-]$"
+local KANA_RULES = {["fwa"]={"ふぁ"},["gwa"]={"ぐぁ"},["dwa"]={"どぁ"},["va"]={"ゔぁ"},["kwa"]={"くぁ"},["hwa"]={"ふぁ"},["wa"]={"わ"},["ra"]={"ら"},["lwa"]={"ゎ"},["sa"]={"さ"},["na"]={"な"},["ma"]={"ま"},["pa"]={"ぱ"},["tsa"]={"つぁ"},["ja"]={"じゃ"},["zya"]={"じゃ"},["la"]={"ぁ"},["ka"]={"か"},["fa"]={"ふぁ"},["vya"]={"ゔゃ"},["xwa"]={"ゎ"},["ga"]={"が"},["ba"]={"ば"},["rya"]={"りゃ"},["a"]={"あ"},["tya"]={"ちゃ"},["mya"]={"みゃ"},["nya"]={"にゃ"},["pya"]={"ぴゃ"},["sha"]={"しゃ"},["jya"]={"じゃ"},["kya"]={"きゃ"},["lya"]={"ゃ"},["gya"]={"ぎゃ"},["hya"]={"ひゃ"},["bya"]={"びゃ"},["cya"]={"ちゃ"},["dya"]={"ぢゃ"},["ha"]={"は"},["cha"]={"ちゃ"},["sya"]={"しゃ"},["xa"]={"ぁ"},["tha"]={"てゃ"},["twa"]={"とぁ"},["swa"]={"すぁ"},["da"]={"だ"},["dha"]={"でゃ"},["xya"]={"ゃ"},["ta"]={"た"},["ya"]={"や"},["za"]={"ざ"}}
+local SLIDE_CHARS = {"ゃ","ゅ","ょ","ぁ","ぃ","ぅ","ぇ","ぉ","`"}
+local LYRIC_END_PATTERN = "[/\x80-\xBF+%-]$"
 local NEXT_NOTE_CHAR = "/"
 local VIEW_TOLERANCE = 0.1
 local USE_HIRAGANA = true
@@ -136,7 +136,7 @@ local function getTargetNote(noteGroup, key)
   local prevLyric = prevNote:getLyrics()
   local prevLyricNormalized = noteLyricNormalize(prevNote, prevLyric)
 
-  if not IS_SLIDE_KEY and prevLyric:find(LYRIC_END_PATTERN) then
+  if prevLyric:find(LYRIC_END_PATTERN) then
     return targetNote, targetNoteIndex, ""
   end
 
@@ -161,6 +161,19 @@ function main()
 
   if wouldConvert and isLyricMode then
     local inputedLyrics, nextLyrics = convertRomaji(lyric .. KEY)
+    local isSlide = arrayFind(SLIDE_CHARS, function (char)
+      return char == inputedLyrics
+    end)
+
+    if isSlide then
+      local prevNote = selectedNotes[noteIndex - 1]
+      if prevNote then
+        prevNote:setLyrics(prevNote:getLyrics() .. inputedLyrics)
+
+        firstNote:setLyrics(nextLyrics or "")
+        return SV:finish()
+      end
+    end
 
     if nextLyrics then
       local nextNote = selectedNotes[noteIndex + 1]

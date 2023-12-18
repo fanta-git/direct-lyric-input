@@ -2,8 +2,8 @@ local KEY = "."
 local KEY_NAME = "_period"
 local KEY_LENGHT = {}
 local KANA_RULES = {}
-local IS_SLIDE_KEY = false
-local LYRIC_END_PATTERN = "[/\x80-\xBF+-]$"
+local SLIDE_CHARS = {"ゃ","ゅ","ょ","ぁ","ぃ","ぅ","ぇ","ぉ","`"}
+local LYRIC_END_PATTERN = "[/\x80-\xBF+%-]$"
 local NEXT_NOTE_CHAR = "/"
 local VIEW_TOLERANCE = 0.1
 local USE_HIRAGANA = true
@@ -136,7 +136,7 @@ local function getTargetNote(noteGroup, key)
   local prevLyric = prevNote:getLyrics()
   local prevLyricNormalized = noteLyricNormalize(prevNote, prevLyric)
 
-  if not IS_SLIDE_KEY and prevLyric:find(LYRIC_END_PATTERN) then
+  if prevLyric:find(LYRIC_END_PATTERN) then
     return targetNote, targetNoteIndex, ""
   end
 
@@ -161,6 +161,19 @@ function main()
 
   if wouldConvert and isLyricMode then
     local inputedLyrics, nextLyrics = convertRomaji(lyric .. KEY)
+    local isSlide = arrayFind(SLIDE_CHARS, function (char)
+      return char == inputedLyrics
+    end)
+
+    if isSlide then
+      local prevNote = selectedNotes[noteIndex - 1]
+      if prevNote then
+        prevNote:setLyrics(prevNote:getLyrics() .. inputedLyrics)
+
+        firstNote:setLyrics(nextLyrics or "")
+        return SV:finish()
+      end
+    end
 
     if nextLyrics then
       local nextNote = selectedNotes[noteIndex + 1]

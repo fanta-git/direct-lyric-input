@@ -2,7 +2,7 @@ local KEY = __KEY__
 local KEY_NAME = __KEY_NAME__
 local KEY_LENGHT = __KEY_LENGHT__
 local KANA_RULES = __KANA_RULES__
-local IS_SLIDE_KEY = __IS_SLIDE_KEY__
+local SLIDE_CHARS = __SLIDE_CHARS__
 local LYRIC_END_PATTERN = __LYRIC_END_PATTERN__
 local NEXT_NOTE_CHAR = __NEXT_NOTE_CHAR__
 local VIEW_TOLERANCE = __VIEW_TOLERANCE__
@@ -136,7 +136,7 @@ local function getTargetNote(noteGroup, key)
   local prevLyric = prevNote:getLyrics()
   local prevLyricNormalized = noteLyricNormalize(prevNote, prevLyric)
 
-  if not IS_SLIDE_KEY and prevLyric:find(LYRIC_END_PATTERN) then
+  if prevLyric:find(LYRIC_END_PATTERN) then
     return targetNote, targetNoteIndex, ""
   end
 
@@ -161,6 +161,19 @@ function main()
 
   if wouldConvert and isLyricMode then
     local inputedLyrics, nextLyrics = convertRomaji(lyric .. KEY)
+    local isSlide = arrayFind(SLIDE_CHARS, function (char)
+      return char == inputedLyrics
+    end)
+
+    if isSlide then
+      local prevNote = selectedNotes[noteIndex - 1]
+      if prevNote then
+        prevNote:setLyrics(prevNote:getLyrics() .. inputedLyrics)
+
+        firstNote:setLyrics(nextLyrics or "")
+        return SV:finish()
+      end
+    end
 
     if nextLyrics then
       local nextNote = selectedNotes[noteIndex + 1]
