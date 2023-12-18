@@ -15,8 +15,7 @@ local VIEW_TOLERANCE = 0.1
 
 -- 歌詞入力対象のノートを次に飛ばす条件の文字 記法は https://www.lua.org/manual/5.4/manual.html#6.4.1 を参照
 -- デフォルト設定は "\\x80-\\xBF+%-" で、これはひらがなと+、-が最後にあるノートは飛ばす設定
--- 処理中で NEXT_NOTE_CHAR と一緒に[]に放り込むため、- や [ などの記号は%によるエスケープが必要
-local LYRIC_END = "\\x80-\\xBF+%-"
+local LYRIC_END_CHARS = { "+", "-" }
 
 -- 非ひらがな入力時、次のノートに飛ばす文字
 -- デフォルト設定は "/" 、英語ノートを書いている時とかはhello/ とか打つと次のノートに移動できる
@@ -268,8 +267,6 @@ function main()
     end)
   end
 
-  local LYRIC_END_PATTERN = "[" .. NEXT_NOTE_CHAR .. LYRIC_END .. "]$"
-
   local ostype = SV:getHostInfo().osType
   local keysTemplatePath = table.concat(
     { SCRIPT_DIR_PATH, TEMPLATES_DIR_NAME, INPUT_TEMPLATE .. TEMPLATE_FILE_EXT },
@@ -293,7 +290,7 @@ function main()
       KEY_LENGHT = arrayToString(kanaKeyLengthMap[key.KEY] or {}),
       KANA_RULES = tableToString(kanaRulesMap[key.KEY] or {}, arrayToString),
       SLIDE_CHARS = arrayToString(SLIDE_CHARS),
-      LYRIC_END_PATTERN = primitiveToString(LYRIC_END_PATTERN),
+      LYRIC_END_CHARS = arrayToString(LYRIC_END_CHARS),
       NEXT_NOTE_CHAR = primitiveToString(NEXT_NOTE_CHAR),
       VIEW_TOLERANCE = primitiveToString(VIEW_TOLERANCE),
       USE_HIRAGANA = primitiveToString(USE_HIRAGANA),

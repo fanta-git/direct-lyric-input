@@ -3,7 +3,7 @@ local KEY_NAME = "R"
 local KEY_LENGHT = {2}
 local KANA_RULES = {["nr"]={"ん","r"},["rr"]={"っ","r"}}
 local SLIDE_CHARS = {"ゃ","ゅ","ょ","ぁ","ぃ","ぅ","ぇ","ぉ","`"}
-local LYRIC_END_PATTERN = "[/\x80-\xBF+%-]$"
+local LYRIC_END_CHARS = {"+","-"}
 local NEXT_NOTE_CHAR = "/"
 local VIEW_TOLERANCE = 0.1
 local USE_HIRAGANA = true
@@ -112,9 +112,8 @@ end
 
 ---歌詞が完全に入力されていない最初のノートを取得
 ---@param noteGroup Note[]
----@param key string
 ---@return Note | nil, number, string
-local function getTargetNote(noteGroup, key)
+local function getTargetNote(noteGroup)
   if #noteGroup == 0 then
     return nil, -1, ""
   end
@@ -136,7 +135,13 @@ local function getTargetNote(noteGroup, key)
   local prevLyric = prevNote:getLyrics()
   local prevLyricNormalized = noteLyricNormalize(prevNote, prevLyric)
 
-  if prevLyric:find(LYRIC_END_PATTERN) then
+  local lastChar = prevLyricNormalized:sub(-1)
+  local isEndMultiByte = (lastChar:byte() & 0xC0) == 0x80
+  local isEndChar = isEndMultiByte or lastChar == NEXT_NOTE_CHAR or arrayFind(LYRIC_END_CHARS, function (char)
+    return char == lastChar
+  end)
+
+  if isEndChar then
     return targetNote, targetNoteIndex, ""
   end
 
@@ -148,7 +153,7 @@ function main()
   local mainEditor = SV:getMainEditor()
   local selection = mainEditor:getSelection()
   local selectedNotes = sortNotesByIndex(selection:getSelectedNotes())
-  local firstNote, noteIndex, lyric = getTargetNote(selectedNotes, KEY)
+  local firstNote, noteIndex, lyric = getTargetNote(selectedNotes)
   if firstNote == nil then
     return SV:finish()
   end
@@ -167,8 +172,9 @@ function main()
 
     if isSlide then
       local prevNote = selectedNotes[noteIndex - 1]
-      if prevNote then
-        prevNote:setLyrics(prevNote:getLyrics() .. inputedLyrics)
+      local prevLyrics = prevNote and prevNote:getLyrics() or ""
+      if #prevLyrics > 0 and (prevLyrics:byte(-1) & 0xC0) == 0x80 then
+        prevNote:setLyrics(prevLyrics .. inputedLyrics)
 
         firstNote:setLyrics(nextLyrics or "")
         return SV:finish()

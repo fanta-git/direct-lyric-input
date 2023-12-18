@@ -1,9 +1,9 @@
 local KEY = "a"
 local KEY_NAME = "A"
 local KEY_LENGHT = {3,2,1}
-local KANA_RULES = {["fwa"]={"ふぁ"},["gwa"]={"ぐぁ"},["dwa"]={"どぁ"},["va"]={"ゔぁ"},["kwa"]={"くぁ"},["hwa"]={"ふぁ"},["wa"]={"わ"},["ra"]={"ら"},["lwa"]={"ゎ"},["sa"]={"さ"},["na"]={"な"},["ma"]={"ま"},["pa"]={"ぱ"},["tsa"]={"つぁ"},["ja"]={"じゃ"},["zya"]={"じゃ"},["la"]={"ぁ"},["ka"]={"か"},["fa"]={"ふぁ"},["vya"]={"ゔゃ"},["xwa"]={"ゎ"},["ga"]={"が"},["ba"]={"ば"},["rya"]={"りゃ"},["a"]={"あ"},["tya"]={"ちゃ"},["mya"]={"みゃ"},["nya"]={"にゃ"},["pya"]={"ぴゃ"},["sha"]={"しゃ"},["jya"]={"じゃ"},["kya"]={"きゃ"},["lya"]={"ゃ"},["gya"]={"ぎゃ"},["hya"]={"ひゃ"},["bya"]={"びゃ"},["cya"]={"ちゃ"},["dya"]={"ぢゃ"},["ha"]={"は"},["cha"]={"ちゃ"},["sya"]={"しゃ"},["xa"]={"ぁ"},["tha"]={"てゃ"},["twa"]={"とぁ"},["swa"]={"すぁ"},["da"]={"だ"},["dha"]={"でゃ"},["xya"]={"ゃ"},["ta"]={"た"},["ya"]={"や"},["za"]={"ざ"}}
+local KANA_RULES = {["da"]={"だ"},["fa"]={"ふぁ"},["ba"]={"ば"},["ka"]={"か"},["la"]={"ぁ"},["ma"]={"ま"},["na"]={"な"},["ga"]={"が"},["ha"]={"は"},["ja"]={"じゃ"},["sa"]={"さ"},["ta"]={"た"},["va"]={"ゔぁ"},["pa"]={"ぱ"},["ra"]={"ら"},["dwa"]={"どぁ"},["dya"]={"ぢゃ"},["cya"]={"ちゃ"},["cha"]={"ちゃ"},["dha"]={"でゃ"},["ya"]={"や"},["za"]={"ざ"},["lwa"]={"ゎ"},["kwa"]={"くぁ"},["lya"]={"ゃ"},["tsa"]={"つぁ"},["jya"]={"じゃ"},["gwa"]={"ぐぁ"},["hya"]={"ひゃ"},["a"]={"あ"},["vya"]={"ゔゃ"},["swa"]={"すぁ"},["tya"]={"ちゃ"},["sya"]={"しゃ"},["rya"]={"りゃ"},["pya"]={"ぴゃ"},["kya"]={"きゃ"},["mya"]={"みゃ"},["gya"]={"ぎゃ"},["xwa"]={"ゎ"},["nya"]={"にゃ"},["xya"]={"ゃ"},["twa"]={"とぁ"},["hwa"]={"ふぁ"},["xa"]={"ぁ"},["wa"]={"わ"},["zya"]={"じゃ"},["fwa"]={"ふぁ"},["bya"]={"びゃ"},["sha"]={"しゃ"},["tha"]={"てゃ"}}
 local SLIDE_CHARS = {"ゃ","ゅ","ょ","ぁ","ぃ","ぅ","ぇ","ぉ","`"}
-local LYRIC_END_PATTERN = "[/\x80-\xBF+%-]$"
+local LYRIC_END_CHARS = {"+","-"}
 local NEXT_NOTE_CHAR = "/"
 local VIEW_TOLERANCE = 0.1
 local USE_HIRAGANA = true
@@ -112,9 +112,8 @@ end
 
 ---歌詞が完全に入力されていない最初のノートを取得
 ---@param noteGroup Note[]
----@param key string
 ---@return Note | nil, number, string
-local function getTargetNote(noteGroup, key)
+local function getTargetNote(noteGroup)
   if #noteGroup == 0 then
     return nil, -1, ""
   end
@@ -136,7 +135,13 @@ local function getTargetNote(noteGroup, key)
   local prevLyric = prevNote:getLyrics()
   local prevLyricNormalized = noteLyricNormalize(prevNote, prevLyric)
 
-  if prevLyric:find(LYRIC_END_PATTERN) then
+  local lastChar = prevLyricNormalized:sub(-1)
+  local isEndMultiByte = (lastChar:byte() & 0xC0) == 0x80
+  local isEndChar = isEndMultiByte or lastChar == NEXT_NOTE_CHAR or arrayFind(LYRIC_END_CHARS, function (char)
+    return char == lastChar
+  end)
+
+  if isEndChar then
     return targetNote, targetNoteIndex, ""
   end
 
@@ -148,7 +153,7 @@ function main()
   local mainEditor = SV:getMainEditor()
   local selection = mainEditor:getSelection()
   local selectedNotes = sortNotesByIndex(selection:getSelectedNotes())
-  local firstNote, noteIndex, lyric = getTargetNote(selectedNotes, KEY)
+  local firstNote, noteIndex, lyric = getTargetNote(selectedNotes)
   if firstNote == nil then
     return SV:finish()
   end
@@ -167,8 +172,9 @@ function main()
 
     if isSlide then
       local prevNote = selectedNotes[noteIndex - 1]
-      if prevNote then
-        prevNote:setLyrics(prevNote:getLyrics() .. inputedLyrics)
+      local prevLyrics = prevNote and prevNote:getLyrics() or ""
+      if #prevLyrics > 0 and (prevLyrics:byte(-1) & 0xC0) == 0x80 then
+        prevNote:setLyrics(prevLyrics .. inputedLyrics)
 
         firstNote:setLyrics(nextLyrics or "")
         return SV:finish()

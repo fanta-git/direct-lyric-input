@@ -4,7 +4,7 @@
         "__KEY_LENGHT__",
         "__KANA_RULES__",
         "__SLIDE_CHARS__",
-        "__LYRIC_END_PATTERN__",
+        "__LYRIC_END_CHARS__",
         "__NEXT_NOTE_CHAR__",
         "__VIEW_TOLERANCE__",
         "__USE_HIRAGANA__",
