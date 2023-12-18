@@ -333,4 +333,5 @@ function getClientInfo() end
 ---@field status YesNoCancelAnswer | boolean ダイアログのボタンに対する値。
 ---@field answers table<string, string | number | boolean> ウィジェットの名前と値のペアのテーブル。
 
+---@diagnostic disable-next-line: missing-fields
 SV = ({} --[[@as SV]])

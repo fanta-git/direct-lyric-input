@@ -2,6 +2,8 @@
 --- ここから設定用
 ----------------------------------------------
 
+-- 設定の反映にはファイルの保存後スクリプトの再読み込み、initの実行、再度スクリプトの再読み込みが必要です
+
 -- ひらがな変換を行うなら true , 行わない（常にアルファベットのまま）なら false を設定
 -- 設定が true でも、ノートの言語設定が日本語でない時と歌詞が . から始まるときはひらがな変換は行われない
 -- グループ/トラックの設定が英語でもノートごとの設定がデフォルトのままならひらがな変換はこの設定に従う
@@ -11,9 +13,10 @@ local USE_HIRAGANA = true
 -- デフォルト設定は 0.1
 local VIEW_TOLERANCE = 0.1
 
--- 歌詞入力対象のノートを次に飛ばす条件の文字
--- デフォルト設定は "\\x80-\\xBF+-" で、これはひらがなと+、-が最後にあるノートは飛ばす設定
-local LYRIC_END = "\\x80-\\xBF+-"
+-- 歌詞入力対象のノートを次に飛ばす条件の文字 記法は https://www.lua.org/manual/5.4/manual.html#6.4.1 を参照
+-- デフォルト設定は "\\x80-\\xBF+%-" で、これはひらがなと+、-が最後にあるノートは飛ばす設定
+-- 処理中で NEXT_NOTE_CHAR と一緒に[]に放り込むため、- や [ などの記号は%によるエスケープが必要
+local LYRIC_END = "\\x80-\\xBF+%-"
 
 -- 非ひらがな入力時、次のノートに飛ばす文字
 -- デフォルト設定は "/" 、英語ノートを書いている時とかはhello/ とか打つと次のノートに移動できる
@@ -25,7 +28,7 @@ local SLIDE_KEYS = { "l", "x", "`" }
 
 -- このスクリプトのあるフォルダへのフルパス、設定しなくてもスクリプトは使えるが、initの実行時には必要
 -- バックスラッシュにはエスケープが要るため、Windowsの場合 C:\\User\\〜 のようになる
--- Macならデフォルトのままで良い
+-- Macならデフォルトのままで良い 末尾のスラッシュは不要
 local SCRIPT_DIR_PATH = "/Library/Application Support/Dreamtonics/Synthesizer V Studio/scripts/direct-lyric-input"
 
 -- ファイル名まわり 触らないで良い
@@ -37,7 +40,7 @@ local OTHER_TEMPLATES = { "lyricClear", "lyricClearAll" }
 local PATH_SEPS = { Windows = "\\", macOS = "/", Linux = "/", Unknown = "/" }
 
 -- 以下はスクリプト生成用のテンプレート
--- 例えば9にも対応させるときは { KEY = "9", KEY_NAME = "9" }, を追加してinitを実行し、エディタからショートカットを割り当てる
+-- 例えば9にも対応させるときは { KEY = "9", KEY_NAME = "9" }, を追加してinitを実行し、ショートカットを割り当てる
 -- KEYは入力される文字、KEY_NAMEはスクリプトファイル名
 ---@type { KEY: string, KEY_NAME: string }[]
 local KEYS_LIST = {
@@ -75,7 +78,7 @@ local KEYS_LIST = {
 }
 
 -- ひらがな変換用のルール 変換時はルールが長いものを優先する（a より kaを優先）
--- 例えば「cl」→「っ」を追加したければ cl = { "っ" }, を追加してinitを実行する
+-- 例えば「cl」→「っ」を追加したければ cl = { "っ" }, を追加する
 ---@type table<string, string[]>
 local KANA_RULES = {
   a = { "あ" }, i = { "い" }, u = { "う" }, e = { "え" }, o = { "お" },
@@ -222,8 +225,12 @@ end
 ---@param path string 生成するスクリプトファイルのパス
 ---@param template string[] テンプレートファイルの内容
 ---@param vars table<string, string> テンプレートファイル内の変数を置換する文字列のテーブル
+---@return boolean # 生成に成功した場合はtrue、失敗した場合はfalse
 local function writeTemplate(path, template, vars)
-  local file = io.open(path, "w") --[[@as file*]]
+  local file = io.open(path, "w")
+  if file == nil then
+    return false
+  end
   for _, line in ipairs(template) do
     line = line:gsub("__([%w_]+)__", function (key)
       return vars[key]
@@ -231,6 +238,7 @@ local function writeTemplate(path, template, vars)
     file:write(line .. "\n")
   end
   file:close()
+  return true
 end
 
 ---@diagnostic disable-next-line: lowercase-global
@@ -274,25 +282,32 @@ function main()
     PATH_SEPS[ostype]
   )
   local keysTemplate = readFile(keysTemplatePath)
-  if keysTemplate then
-    for _, key in ipairs(KEYS_LIST) do
-      local keyName = "input-" .. key.KEY_NAME
-      local keyPath = table.concat(
-        { SCRIPT_DIR_PATH, OUTPUT_DIR_NAME, keyName .. ".lua" },
-        PATH_SEPS[ostype]
-      )
+  if keysTemplate == nil then
+    SV:showMessageBox("エラー", "テンプレートの読み込みに失敗しました。このスクリプトのフォルダへのパスが間違っているかもしれません。以下のパスにスクリプトフォルダは存在していますか？パスの変更はinit.luaをテキストエディタなどで編集することで行えます。\n\n" .. SCRIPT_DIR_PATH)
+    return SV:finish()
+  end
+  for _, key in ipairs(KEYS_LIST) do
+    local keyName = "input-" .. key.KEY_NAME
+    local keyPath = table.concat(
+      { SCRIPT_DIR_PATH, OUTPUT_DIR_NAME, keyName .. ".lua" },
+      PATH_SEPS[ostype]
+    )
 
-      writeTemplate(keyPath, keysTemplate, {
-        KEY = primitiveToString(key.KEY),
-        KEY_NAME = primitiveToString(key.KEY_NAME),
-        KEY_LENGHT = arrayToString(kanaKeyLengthMap[key.KEY] or {}),
-        KANA_RULES = tableToString(kanaRulesMap[key.KEY] or {}, arrayToString),
-        IS_SLIDE_KEY = primitiveToString(SLIDE_KEYS_SET_STR[key.KEY] and true or false),
-        LYRIC_END_PATTERN = primitiveToString(LYRIC_END_PATTERN),
-        NEXT_NOTE_CHAR = primitiveToString(NEXT_NOTE_CHAR),
-        VIEW_TOLERANCE = primitiveToString(VIEW_TOLERANCE),
-        USE_HIRAGANA = primitiveToString(USE_HIRAGANA),
-      })
+    local isWrited = writeTemplate(keyPath, keysTemplate, {
+      KEY = primitiveToString(key.KEY),
+      KEY_NAME = primitiveToString(key.KEY_NAME),
+      KEY_LENGHT = arrayToString(kanaKeyLengthMap[key.KEY] or {}),
+      KANA_RULES = tableToString(kanaRulesMap[key.KEY] or {}, arrayToString),
+      IS_SLIDE_KEY = primitiveToString(SLIDE_KEYS_SET_STR[key.KEY] and true or false),
+      LYRIC_END_PATTERN = primitiveToString(LYRIC_END_PATTERN),
+      NEXT_NOTE_CHAR = primitiveToString(NEXT_NOTE_CHAR),
+      VIEW_TOLERANCE = primitiveToString(VIEW_TOLERANCE),
+      USE_HIRAGANA = primitiveToString(USE_HIRAGANA),
+    })
+
+    if not isWrited then
+      SV:showMessageBox("エラー", "スクリプトの生成に失敗しました。" .. OUTPUT_DIR_NAME .. "フォルダがスクリプトフォルダに存在していないかもしれません。")
+      return SV:finish()
     end
   end
 
@@ -303,16 +318,21 @@ function main()
     )
 
     local template = readFile(templatePath)
-    if template then
-      local outputPath = table.concat(
-        { SCRIPT_DIR_PATH, OUTPUT_DIR_NAME, templateName .. ".lua" },
-        PATH_SEPS[ostype]
-      )
-      writeTemplate(outputPath, template, {
-        VIEW_TOLERANCE = primitiveToString(VIEW_TOLERANCE),
-      })
+    if template == nil then
+      SV:showMessageBox("エラー", templateName .. "テンプレートの読み込みに失敗しました。スクリプトフォルダのtemplateフォルダ内にこのテンプレートは存在していますか？")
+      return SV:finish()
     end
+
+    local outputPath = table.concat(
+      { SCRIPT_DIR_PATH, OUTPUT_DIR_NAME, templateName .. ".lua" },
+      PATH_SEPS[ostype]
+    )
+    writeTemplate(outputPath, template, {
+      VIEW_TOLERANCE = primitiveToString(VIEW_TOLERANCE),
+    })
   end
+
+  SV:showMessageBox("実行完了", "スクリプトの生成が完了しました。スクリプトを再読み込みしてください。\n新たにキー設定を増やした場合はキーボードショートカットの設定も必要です。")
 
   return SV:finish()
 end
