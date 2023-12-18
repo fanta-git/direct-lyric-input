@@ -1,7 +1,7 @@
 local KEY = "o"
 local KEY_NAME = "O"
 local KEY_LENGHT = {3,2,1}
-local KANA_RULES = {["fo"]={"ふぉ"},["nyo"]={"にょ"},["xyo"]={"ょ"},["tso"]={"つぉ"},["zyo"]={"じょ"},["syo"]={"しょ"},["tyo"]={"ちょ"},["swo"]={"すぉ"},["two"]={"とぉ"},["to"]={"と"},["o"]={"お"},["ro"]={"ろ"},["so"]={"そ"},["xo"]={"ぉ"},["yo"]={"よ"},["vo"]={"ゔぉ"},["wo"]={"を"},["lo"]={"ぉ"},["mo"]={"も"},["gwo"]={"ぐぉ"},["ko"]={"こ"},["po"]={"ぽ"},["fwo"]={"ふぉ"},["no"]={"の"},["dwo"]={"どぉ"},["do"]={"ど"},["pyo"]={"ぴょ"},["bo"]={"ぼ"},["ryo"]={"りょ"},["ho"]={"ほ"},["lyo"]={"ょ"},["kwo"]={"くぉ"},["go"]={"ご"},["tho"]={"てょ"},["sho"]={"しょ"},["myo"]={"みょ"},["kyo"]={"きょ"},["dyo"]={"ぢょ"},["cyo"]={"ちょ"},["jyo"]={"じょ"},["hyo"]={"ひょ"},["gyo"]={"ぎょ"},["vyo"]={"ゔょ"},["jo"]={"じょ"},["byo"]={"びょ"},["dho"]={"でょ"},["zo"]={"ぞ"},["cho"]={"ちょ"},["hwo"]={"ふぉ"}}
+local KANA_RULES = {["bo"]={"ぼ"},["cyo"]={"ちょ"},["dyo"]={"ぢょ"},["no"]={"の"},["byo"]={"びょ"},["po"]={"ぽ"},["gwo"]={"ぐぉ"},["ro"]={"ろ"},["so"]={"そ"},["kyo"]={"きょ"},["lyo"]={"ょ"},["myo"]={"みょ"},["nyo"]={"にょ"},["tho"]={"てょ"},["hyo"]={"ひょ"},["zo"]={"ぞ"},["jyo"]={"じょ"},["syo"]={"しょ"},["tyo"]={"ちょ"},["swo"]={"すぉ"},["vyo"]={"ゔょ"},["dwo"]={"どぉ"},["pyo"]={"ぴょ"},["two"]={"とぉ"},["ryo"]={"りょ"},["do"]={"ど"},["cho"]={"ちょ"},["fo"]={"ふぉ"},["go"]={"ご"},["ho"]={"ほ"},["xyo"]={"ょ"},["jo"]={"じょ"},["ko"]={"こ"},["hwo"]={"ふぉ"},["kwo"]={"くぉ"},["fwo"]={"ふぉ"},["o"]={"お"},["zyo"]={"じょ"},["tso"]={"つぉ"},["dho"]={"でょ"},["yo"]={"よ"},["xo"]={"ぉ"},["wo"]={"を"},["vo"]={"ゔぉ"},["to"]={"と"},["mo"]={"も"},["lo"]={"ぉ"},["sho"]={"しょ"},["gyo"]={"ぎょ"}}
 local SLIDE_CHARS = {"ゃ","ゅ","ょ","ぁ","ぃ","ぅ","ぇ","ぉ","`"}
 local LYRIC_END_CHARS = {"+","-"}
 local NEXT_NOTE_CHAR = "/"
@@ -135,7 +135,7 @@ local function getTargetNote(noteGroup)
   local prevLyric = prevNote:getLyrics()
   local prevLyricNormalized = noteLyricNormalize(prevNote, prevLyric)
 
-  local lastChar = prevLyricNormalized:sub(-1)
+  local lastChar = prevLyric:sub(-1)
   local isEndMultiByte = (lastChar:byte() & 0xC0) == 0x80
   local isEndChar = isEndMultiByte or lastChar == NEXT_NOTE_CHAR or arrayFind(LYRIC_END_CHARS, function (char)
     return char == lastChar

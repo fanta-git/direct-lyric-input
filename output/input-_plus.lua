@@ -135,7 +135,7 @@ local function getTargetNote(noteGroup)
   local prevLyric = prevNote:getLyrics()
   local prevLyricNormalized = noteLyricNormalize(prevNote, prevLyric)
 
-  local lastChar = prevLyricNormalized:sub(-1)
+  local lastChar = prevLyric:sub(-1)
   local isEndMultiByte = (lastChar:byte() & 0xC0) == 0x80
   local isEndChar = isEndMultiByte or lastChar == NEXT_NOTE_CHAR or arrayFind(LYRIC_END_CHARS, function (char)
     return char == lastChar

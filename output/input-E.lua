@@ -1,7 +1,7 @@
 local KEY = "e"
 local KEY_NAME = "E"
 local KEY_LENGHT = {3,2,1}
-local KANA_RULES = {["be"]={"べ"},["de"]={"で"},["fe"]={"ふぇ"},["ge"]={"げ"},["he"]={"へ"},["the"]={"てぇ"},["je"]={"じぇ"},["ke"]={"け"},["le"]={"ぇ"},["me"]={"め"},["ne"]={"ね"},["pe"]={"ぺ"},["re"]={"れ"},["se"]={"せ"},["te"]={"て"},["che"]={"ちぇ"},["we"]={"うぇ"},["xe"]={"ぇ"},["dhe"]={"でぇ"},["bye"]={"びぇ"},["cye"]={"ちぇ"},["dye"]={"ぢぇ"},["gye"]={"ぎぇ"},["hye"]={"ひぇ"},["jye"]={"じぇ"},["e"]={"え"},["swe"]={"すぇ"},["mye"]={"みぇ"},["nye"]={"にぇ"},["pye"]={"ぴぇ"},["rye"]={"りぇ"},["sye"]={"しぇ"},["tye"]={"ちぇ"},["gwe"]={"ぐぇ"},["hwe"]={"ふぇ"},["zye"]={"じぇ"},["fwe"]={"ふぇ"},["dwe"]={"どぇ"},["ye"]={"いぇ"},["kwe"]={"くぇ"},["twe"]={"とぇ"},["ze"]={"ぜ"},["ve"]={"ゔぇ"},["tse"]={"つぇ"},["kye"]={"きぇ"},["she"]={"しぇ"}}
+local KANA_RULES = {["zye"]={"じぇ"},["ye"]={"いぇ"},["ze"]={"ぜ"},["we"]={"うぇ"},["e"]={"え"},["ve"]={"ゔぇ"},["sye"]={"しぇ"},["tye"]={"ちぇ"},["nye"]={"にぇ"},["hye"]={"ひぇ"},["mye"]={"みぇ"},["tse"]={"つぇ"},["pye"]={"ぴぇ"},["kwe"]={"くぇ"},["twe"]={"とぇ"},["de"]={"で"},["gwe"]={"ぐぇ"},["be"]={"べ"},["she"]={"しぇ"},["kye"]={"きぇ"},["he"]={"へ"},["ge"]={"げ"},["dwe"]={"どぇ"},["bye"]={"びぇ"},["fwe"]={"ふぇ"},["swe"]={"すぇ"},["gye"]={"ぎぇ"},["the"]={"てぇ"},["cye"]={"ちぇ"},["dye"]={"ぢぇ"},["se"]={"せ"},["jye"]={"じぇ"},["rye"]={"りぇ"},["re"]={"れ"},["hwe"]={"ふぇ"},["pe"]={"ぺ"},["me"]={"め"},["ne"]={"ね"},["ke"]={"け"},["le"]={"ぇ"},["xe"]={"ぇ"},["je"]={"じぇ"},["che"]={"ちぇ"},["dhe"]={"でぇ"},["te"]={"て"},["fe"]={"ふぇ"}}
 local SLIDE_CHARS = {"ゃ","ゅ","ょ","ぁ","ぃ","ぅ","ぇ","ぉ","`"}
 local LYRIC_END_CHARS = {"+","-"}
 local NEXT_NOTE_CHAR = "/"
@@ -135,7 +135,7 @@ local function getTargetNote(noteGroup)
   local prevLyric = prevNote:getLyrics()
   local prevLyricNormalized = noteLyricNormalize(prevNote, prevLyric)
 
-  local lastChar = prevLyricNormalized:sub(-1)
+  local lastChar = prevLyric:sub(-1)
   local isEndMultiByte = (lastChar:byte() & 0xC0) == 0x80
   local isEndChar = isEndMultiByte or lastChar == NEXT_NOTE_CHAR or arrayFind(LYRIC_END_CHARS, function (char)
     return char == lastChar

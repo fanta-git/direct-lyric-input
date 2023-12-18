@@ -1,7 +1,7 @@
 local KEY = "u"
 local KEY_NAME = "U"
 local KEY_LENGHT = {4,3,2,1}
-local KANA_RULES = {["zyu"]={"じゅ"},["tsu"]={"つ"},["twu"]={"とぅ"},["vyu"]={"ゔゅ"},["xtsu"]={"っ"},["swu"]={"すぅ"},["ryu"]={"りゅ"},["syu"]={"しゅ"},["tyu"]={"ちゅ"},["tu"]={"つ"},["nyu"]={"にゅ"},["vu"]={"ゔ"},["u"]={"う"},["xu"]={"ぅ"},["yu"]={"ゆ"},["zu"]={"ず"},["lyu"]={"ゅ"},["dwu"]={"どぅ"},["gyu"]={"ぎゅ"},["hyu"]={"ひゅ"},["hwu"]={"ふぅ"},["byu"]={"びゅ"},["fwu"]={"ふぅ"},["gwu"]={"ぐぅ"},["du"]={"づ"},["fu"]={"ふ"},["gu"]={"ぐ"},["hu"]={"ふ"},["ju"]={"じゅ"},["ku"]={"く"},["lu"]={"ぅ"},["mu"]={"む"},["nu"]={"ぬ"},["pu"]={"ぷ"},["ru"]={"る"},["su"]={"す"},["wu"]={"う"},["kwu"]={"くぅ"},["dyu"]={"ぢゅ"},["ltu"]={"っ"},["cyu"]={"ちゅ"},["myu"]={"みゅ"},["jyu"]={"じゅ"},["kyu"]={"きゅ"},["pyu"]={"ぴゅ"},["xtu"]={"っ"},["dhu"]={"でゅ"},["chu"]={"ちゅ"},["xyu"]={"ゅ"},["thu"]={"てゅ"},["bu"]={"ぶ"},["shu"]={"しゅ"}}
+local KANA_RULES = {["gwu"]={"ぐぅ"},["fwu"]={"ふぅ"},["dyu"]={"ぢゅ"},["cyu"]={"ちゅ"},["byu"]={"びゅ"},["nyu"]={"にゅ"},["myu"]={"みゅ"},["lyu"]={"ゅ"},["kyu"]={"きゅ"},["jyu"]={"じゅ"},["yu"]={"ゆ"},["zu"]={"ず"},["vyu"]={"ゔゅ"},["xu"]={"ぅ"},["tyu"]={"ちゅ"},["syu"]={"しゅ"},["su"]={"す"},["tu"]={"つ"},["pyu"]={"ぴゅ"},["ru"]={"る"},["pu"]={"ぷ"},["mu"]={"む"},["nu"]={"ぬ"},["zyu"]={"じゅ"},["lu"]={"ぅ"},["xyu"]={"ゅ"},["ju"]={"じゅ"},["gu"]={"ぐ"},["hu"]={"ふ"},["thu"]={"てゅ"},["fu"]={"ふ"},["du"]={"づ"},["bu"]={"ぶ"},["ryu"]={"りゅ"},["shu"]={"しゅ"},["xtsu"]={"っ"},["tsu"]={"つ"},["chu"]={"ちゅ"},["dhu"]={"でゅ"},["dwu"]={"どぅ"},["ltu"]={"っ"},["twu"]={"とぅ"},["swu"]={"すぅ"},["xtu"]={"っ"},["kwu"]={"くぅ"},["hwu"]={"ふぅ"},["gyu"]={"ぎゅ"},["ku"]={"く"},["hyu"]={"ひゅ"},["u"]={"う"},["vu"]={"ゔ"},["wu"]={"う"}}
 local SLIDE_CHARS = {"ゃ","ゅ","ょ","ぁ","ぃ","ぅ","ぇ","ぉ","`"}
 local LYRIC_END_CHARS = {"+","-"}
 local NEXT_NOTE_CHAR = "/"
@@ -135,7 +135,7 @@ local function getTargetNote(noteGroup)
   local prevLyric = prevNote:getLyrics()
   local prevLyricNormalized = noteLyricNormalize(prevNote, prevLyric)
 
-  local lastChar = prevLyricNormalized:sub(-1)
+  local lastChar = prevLyric:sub(-1)
   local isEndMultiByte = (lastChar:byte() & 0xC0) == 0x80
   local isEndChar = isEndMultiByte or lastChar == NEXT_NOTE_CHAR or arrayFind(LYRIC_END_CHARS, function (char)
     return char == lastChar

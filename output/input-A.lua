@@ -1,7 +1,7 @@
 local KEY = "a"
 local KEY_NAME = "A"
 local KEY_LENGHT = {3,2,1}
-local KANA_RULES = {["da"]={"だ"},["fa"]={"ふぁ"},["ba"]={"ば"},["ka"]={"か"},["la"]={"ぁ"},["ma"]={"ま"},["na"]={"な"},["ga"]={"が"},["ha"]={"は"},["ja"]={"じゃ"},["sa"]={"さ"},["ta"]={"た"},["va"]={"ゔぁ"},["pa"]={"ぱ"},["ra"]={"ら"},["dwa"]={"どぁ"},["dya"]={"ぢゃ"},["cya"]={"ちゃ"},["cha"]={"ちゃ"},["dha"]={"でゃ"},["ya"]={"や"},["za"]={"ざ"},["lwa"]={"ゎ"},["kwa"]={"くぁ"},["lya"]={"ゃ"},["tsa"]={"つぁ"},["jya"]={"じゃ"},["gwa"]={"ぐぁ"},["hya"]={"ひゃ"},["a"]={"あ"},["vya"]={"ゔゃ"},["swa"]={"すぁ"},["tya"]={"ちゃ"},["sya"]={"しゃ"},["rya"]={"りゃ"},["pya"]={"ぴゃ"},["kya"]={"きゃ"},["mya"]={"みゃ"},["gya"]={"ぎゃ"},["xwa"]={"ゎ"},["nya"]={"にゃ"},["xya"]={"ゃ"},["twa"]={"とぁ"},["hwa"]={"ふぁ"},["xa"]={"ぁ"},["wa"]={"わ"},["zya"]={"じゃ"},["fwa"]={"ふぁ"},["bya"]={"びゃ"},["sha"]={"しゃ"},["tha"]={"てゃ"}}
+local KANA_RULES = {["za"]={"ざ"},["a"]={"あ"},["xa"]={"ぁ"},["ya"]={"や"},["xwa"]={"ゎ"},["xya"]={"ゃ"},["vya"]={"ゔゃ"},["zya"]={"じゃ"},["ha"]={"は"},["ta"]={"た"},["hya"]={"ひゃ"},["rya"]={"りゃ"},["na"]={"な"},["pya"]={"ぴゃ"},["lya"]={"ゃ"},["twa"]={"とぁ"},["swa"]={"すぁ"},["gwa"]={"ぐぁ"},["lwa"]={"ゎ"},["cha"]={"ちゃ"},["tha"]={"てゃ"},["sha"]={"しゃ"},["dha"]={"でゃ"},["dya"]={"ぢゃ"},["tsa"]={"つぁ"},["bya"]={"びゃ"},["cya"]={"ちゃ"},["ba"]={"ば"},["dwa"]={"どぁ"},["kwa"]={"くぁ"},["fwa"]={"ふぁ"},["fa"]={"ふぁ"},["ga"]={"が"},["da"]={"だ"},["sya"]={"しゃ"},["ja"]={"じゃ"},["ka"]={"か"},["nya"]={"にゃ"},["mya"]={"みゃ"},["tya"]={"ちゃ"},["hwa"]={"ふぁ"},["la"]={"ぁ"},["ma"]={"ま"},["ra"]={"ら"},["sa"]={"さ"},["pa"]={"ぱ"},["gya"]={"ぎゃ"},["va"]={"ゔぁ"},["wa"]={"わ"},["jya"]={"じゃ"},["kya"]={"きゃ"}}
 local SLIDE_CHARS = {"ゃ","ゅ","ょ","ぁ","ぃ","ぅ","ぇ","ぉ","`"}
 local LYRIC_END_CHARS = {"+","-"}
 local NEXT_NOTE_CHAR = "/"
@@ -135,7 +135,7 @@ local function getTargetNote(noteGroup)
   local prevLyric = prevNote:getLyrics()
   local prevLyricNormalized = noteLyricNormalize(prevNote, prevLyric)
 
-  local lastChar = prevLyricNormalized:sub(-1)
+  local lastChar = prevLyric:sub(-1)
   local isEndMultiByte = (lastChar:byte() & 0xC0) == 0x80
   local isEndChar = isEndMultiByte or lastChar == NEXT_NOTE_CHAR or arrayFind(LYRIC_END_CHARS, function (char)
     return char == lastChar
