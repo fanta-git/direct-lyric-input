@@ -70,6 +70,7 @@ local KEYS_LIST = {
   { KEY = "y", KEY_NAME =  "Y" },
   { KEY = "z", KEY_NAME =  "Z" },
   { KEY = "`", KEY_NAME =  "_backquote" },
+  { KEY = "'", KEY_NAME =  "_singlequote" },
   { KEY = "-", KEY_NAME =  "_hyphen" },
   { KEY = ".", KEY_NAME =  "_period" },
   { KEY = "+", KEY_NAME =  "_plus" },
