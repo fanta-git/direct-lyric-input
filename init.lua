@@ -15,7 +15,7 @@ local VIEW_TOLERANCE = 0.1
 
 -- 歌詞入力対象のノートを次に飛ばす条件の文字
 -- ひらがななどマルチバイト文字に加えてこれらの文字で終わるノートにはそれ以上文字を追加せず、入力対象を次へ移動させる
-local LYRIC_END_CHARS = { "+", "-" }
+local LYRIC_END_CHARS = { "+", "-", "`" }
 
 -- 非ひらがな入力時、入力対象を次のノートに飛ばすための文字
 -- デフォルト設定は "/" 、英語ノートでも[hello/]と末尾に / を入れると次のノートに移動できる 移動すると末尾の / は消える
@@ -43,37 +43,38 @@ local PATH_SEPS = { Windows = "\\", macOS = "/", Linux = "/", Unknown = "/" }
 -- KEYは入力される文字、KEY_NAMEはスクリプトファイル名
 ---@type { KEY: string, KEY_NAME: string }[]
 local KEYS_LIST = {
-  { KEY = "a", KEY_NAME =  "A" },
-  { KEY = "b", KEY_NAME =  "B" },
-  { KEY = "c", KEY_NAME =  "C" },
-  { KEY = "d", KEY_NAME =  "D" },
-  { KEY = "e", KEY_NAME =  "E" },
-  { KEY = "f", KEY_NAME =  "F" },
-  { KEY = "g", KEY_NAME =  "G" },
-  { KEY = "h", KEY_NAME =  "H" },
-  { KEY = "i", KEY_NAME =  "I" },
-  { KEY = "j", KEY_NAME =  "J" },
-  { KEY = "k", KEY_NAME =  "K" },
-  { KEY = "l", KEY_NAME =  "L" },
-  { KEY = "m", KEY_NAME =  "M" },
-  { KEY = "n", KEY_NAME =  "N" },
-  { KEY = "o", KEY_NAME =  "O" },
-  { KEY = "p", KEY_NAME =  "P" },
-  { KEY = "q", KEY_NAME =  "Q" },
-  { KEY = "r", KEY_NAME =  "R" },
-  { KEY = "s", KEY_NAME =  "S" },
-  { KEY = "t", KEY_NAME =  "T" },
-  { KEY = "u", KEY_NAME =  "U" },
-  { KEY = "v", KEY_NAME =  "V" },
-  { KEY = "w", KEY_NAME =  "W" },
-  { KEY = "x", KEY_NAME =  "X" },
-  { KEY = "y", KEY_NAME =  "Y" },
-  { KEY = "z", KEY_NAME =  "Z" },
-  { KEY = "`", KEY_NAME =  "_backquote" },
-  { KEY = "-", KEY_NAME =  "_hyphen" },
-  { KEY = ".", KEY_NAME =  "_period" },
-  { KEY = "+", KEY_NAME =  "_plus" },
-  { KEY = "/", KEY_NAME =  "_slash" },
+  { KEY = "a", KEY_NAME = "A" },
+  { KEY = "b", KEY_NAME = "B" },
+  { KEY = "c", KEY_NAME = "C" },
+  { KEY = "d", KEY_NAME = "D" },
+  { KEY = "e", KEY_NAME = "E" },
+  { KEY = "f", KEY_NAME = "F" },
+  { KEY = "g", KEY_NAME = "G" },
+  { KEY = "h", KEY_NAME = "H" },
+  { KEY = "i", KEY_NAME = "I" },
+  { KEY = "j", KEY_NAME = "J" },
+  { KEY = "k", KEY_NAME = "K" },
+  { KEY = "l", KEY_NAME = "L" },
+  { KEY = "m", KEY_NAME = "M" },
+  { KEY = "n", KEY_NAME = "N" },
+  { KEY = "o", KEY_NAME = "O" },
+  { KEY = "p", KEY_NAME = "P" },
+  { KEY = "q", KEY_NAME = "Q" },
+  { KEY = "r", KEY_NAME = "R" },
+  { KEY = "s", KEY_NAME = "S" },
+  { KEY = "t", KEY_NAME = "T" },
+  { KEY = "u", KEY_NAME = "U" },
+  { KEY = "v", KEY_NAME = "V" },
+  { KEY = "w", KEY_NAME = "W" },
+  { KEY = "x", KEY_NAME = "X" },
+  { KEY = "y", KEY_NAME = "Y" },
+  { KEY = "z", KEY_NAME = "Z" },
+  { KEY = "`", KEY_NAME = "_backquote" },
+  { KEY = "'", KEY_NAME = "_singlequote" },
+  { KEY = "-", KEY_NAME = "_hyphen" },
+  { KEY = ".", KEY_NAME = "_period" },
+  { KEY = "+", KEY_NAME = "_plus" },
+  { KEY = "/", KEY_NAME = "_slash" },
 }
 
 -- ひらがな変換用のルール 変換時はルールが長いものを優先する（a より kaを優先）

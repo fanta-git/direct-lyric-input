@@ -1,5 +1,5 @@
-local KEY = "/"
-local KEY_NAME = "_slash"
+local KEY = "'"
+local KEY_NAME = "_singlequote"
 local KEY_LENGHT = {}
 local KANA_RULES = {}
 local SLIDE_CHARS = {"ゃ","ゅ","ょ","ぁ","ぃ","ぅ","ぇ","ぉ","`"}
