@@ -3,7 +3,7 @@ local KEY_NAME = "J"
 local KEY_LENGHT = {2}
 local KANA_RULES = {["jj"]={"っ","j"},["nj"]={"ん","j"}}
 local SLIDE_CHARS = {"ゃ","ゅ","ょ","ぁ","ぃ","ぅ","ぇ","ぉ","`"}
-local LYRIC_END_CHARS = {"+","-"}
+local LYRIC_END_CHARS = {"+","-","`"}
 local NEXT_NOTE_CHAR = "/"
 local VIEW_TOLERANCE = 0.1
 local USE_HIRAGANA = true
