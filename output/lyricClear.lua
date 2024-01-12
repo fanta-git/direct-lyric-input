@@ -32,9 +32,11 @@ end
 ---@param note Note
 local function focusNote(mainEditor, note)
   local coordinate = mainEditor:getNavigation()
+  local currentGroup = mainEditor:getCurrentGroup()
   local viewRangeHorizontal = coordinate:getTimeViewRange()
   local viewLeft, viewRight = viewRangeHorizontal[1], viewRangeHorizontal[2]
-  local noteLeft, noteRight = note:getOnset(), note:getEnd()
+  local groupLeft = currentGroup:getOnset()
+  local noteLeft, noteRight = note:getOnset() + groupLeft, note:getEnd() + groupLeft
 
   local toleranceBlicks = (viewRight - viewLeft) * VIEW_TOLERANCE
 

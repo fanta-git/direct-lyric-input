@@ -1,7 +1,7 @@
 local KEY = "z"
 local KEY_NAME = "Z"
 local KEY_LENGHT = {2}
-local KANA_RULES = {["nz"]={"ん","z"},["zz"]={"っ","z"}}
+local KANA_RULES = {["zz"]={"っ","z"},["nz"]={"ん","z"}}
 local SLIDE_CHARS = {"ゃ","ゅ","ょ","ぁ","ぃ","ぅ","ぇ","ぉ","`"}
 local LYRIC_END_CHARS = {"+","-","`"}
 local NEXT_NOTE_CHAR = "/"
@@ -77,9 +77,11 @@ end
 ---@param note Note
 local function focusNote(mainEditor, note)
   local coordinate = mainEditor:getNavigation()
+  local currentGroup = mainEditor:getCurrentGroup()
   local viewRangeHorizontal = coordinate:getTimeViewRange()
   local viewLeft, viewRight = viewRangeHorizontal[1], viewRangeHorizontal[2]
-  local noteLeft, noteRight = note:getOnset(), note:getEnd()
+  local groupLeft = currentGroup:getOnset()
+  local noteLeft, noteRight = note:getOnset() + groupLeft, note:getEnd() + groupLeft
 
   local toleranceBlicks = (viewRight - viewLeft) * VIEW_TOLERANCE
 

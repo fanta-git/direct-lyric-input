@@ -1,7 +1,7 @@
 local KEY = "i"
 local KEY_NAME = "I"
 local KEY_LENGHT = {3,2,1}
-local KANA_RULES = {["i"]={"い"},["dyi"]={"ぢぃ"},["cyi"]={"ちぃ"},["byi"]={"びぃ"},["hyi"]={"ひぃ"},["gyi"]={"ぎぃ"},["hwi"]={"ふぃ"},["gwi"]={"ぐぃ"},["thi"]={"てぃ"},["fwi"]={"ふぃ"},["shi"]={"し"},["bi"]={"び"},["gi"]={"ぎ"},["fi"]={"ふぃ"},["di"]={"ぢ"},["ki"]={"き"},["ji"]={"じ"},["hi"]={"ひ"},["zyi"]={"じぃ"},["ni"]={"に"},["mi"]={"み"},["li"]={"ぃ"},["si"]={"し"},["ri"]={"り"},["twi"]={"とぃ"},["pi"]={"ぴ"},["wi"]={"うぃ"},["vi"]={"ゔぃ"},["dwi"]={"どぃ"},["ti"]={"ち"},["chi"]={"ち"},["tyi"]={"ちぃ"},["syi"]={"しぃ"},["xi"]={"ぃ"},["zi"]={"じ"},["kwi"]={"くぃ"},["ryi"]={"りぃ"},["swi"]={"すぃ"},["myi"]={"みぃ"},["tsi"]={"つぃ"},["kyi"]={"きぃ"},["jyi"]={"じぃ"},["dhi"]={"でぃ"},["pyi"]={"ぴぃ"},["yi"]={"うぃ"},["nyi"]={"にぃ"}}
+local KANA_RULES = {["nyi"]={"にぃ"},["myi"]={"みぃ"},["tsi"]={"つぃ"},["kyi"]={"きぃ"},["swi"]={"すぃ"},["hyi"]={"ひぃ"},["twi"]={"とぃ"},["gwi"]={"ぐぃ"},["fwi"]={"ふぃ"},["tyi"]={"ちぃ"},["hwi"]={"ふぃ"},["ryi"]={"りぃ"},["pyi"]={"ぴぃ"},["zyi"]={"じぃ"},["yi"]={"うぃ"},["zi"]={"じ"},["wi"]={"うぃ"},["xi"]={"ぃ"},["vi"]={"ゔぃ"},["si"]={"し"},["ti"]={"ち"},["ri"]={"り"},["bi"]={"び"},["shi"]={"し"},["thi"]={"てぃ"},["ni"]={"に"},["ki"]={"き"},["li"]={"ぃ"},["kwi"]={"くぃ"},["ji"]={"じ"},["gi"]={"ぎ"},["hi"]={"ひ"},["mi"]={"み"},["fi"]={"ふぃ"},["pi"]={"ぴ"},["di"]={"ぢ"},["syi"]={"しぃ"},["dwi"]={"どぃ"},["dhi"]={"でぃ"},["chi"]={"ち"},["dyi"]={"ぢぃ"},["cyi"]={"ちぃ"},["byi"]={"びぃ"},["i"]={"い"},["jyi"]={"じぃ"},["gyi"]={"ぎぃ"}}
 local SLIDE_CHARS = {"ゃ","ゅ","ょ","ぁ","ぃ","ぅ","ぇ","ぉ","`"}
 local LYRIC_END_CHARS = {"+","-","`"}
 local NEXT_NOTE_CHAR = "/"
@@ -77,9 +77,11 @@ end
 ---@param note Note
 local function focusNote(mainEditor, note)
   local coordinate = mainEditor:getNavigation()
+  local currentGroup = mainEditor:getCurrentGroup()
   local viewRangeHorizontal = coordinate:getTimeViewRange()
   local viewLeft, viewRight = viewRangeHorizontal[1], viewRangeHorizontal[2]
-  local noteLeft, noteRight = note:getOnset(), note:getEnd()
+  local groupLeft = currentGroup:getOnset()
+  local noteLeft, noteRight = note:getOnset() + groupLeft, note:getEnd() + groupLeft
 
   local toleranceBlicks = (viewRight - viewLeft) * VIEW_TOLERANCE
 
