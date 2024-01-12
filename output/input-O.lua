@@ -1,7 +1,7 @@
 local KEY = "o"
 local KEY_NAME = "O"
 local KEY_LENGHT = {3,2,1}
-local KANA_RULES = {["nyo"]={"にょ"},["myo"]={"みょ"},["lyo"]={"ょ"},["syo"]={"しょ"},["ryo"]={"りょ"},["tso"]={"つぉ"},["pyo"]={"ぴょ"},["vyo"]={"ゔょ"},["o"]={"お"},["tyo"]={"ちょ"},["zyo"]={"じょ"},["xyo"]={"ょ"},["cyo"]={"ちょ"},["byo"]={"びょ"},["do"]={"ど"},["gyo"]={"ぎょ"},["dwo"]={"どぉ"},["gwo"]={"ぐぉ"},["fwo"]={"ふぉ"},["kyo"]={"きょ"},["hwo"]={"ふぉ"},["kwo"]={"くぉ"},["hyo"]={"ひょ"},["no"]={"の"},["po"]={"ぽ"},["so"]={"そ"},["ro"]={"ろ"},["dho"]={"でょ"},["to"]={"と"},["go"]={"ご"},["fo"]={"ふぉ"},["ho"]={"ほ"},["ko"]={"こ"},["jo"]={"じょ"},["mo"]={"も"},["lo"]={"ぉ"},["sho"]={"しょ"},["bo"]={"ぼ"},["dyo"]={"ぢょ"},["tho"]={"てょ"},["swo"]={"すぉ"},["wo"]={"を"},["vo"]={"ゔぉ"},["yo"]={"よ"},["xo"]={"ぉ"},["cho"]={"ちょ"},["zo"]={"ぞ"},["jyo"]={"じょ"},["two"]={"とぉ"}}
+local KANA_RULES = {["dyo"]={"ぢょ"},["dwo"]={"どぉ"},["gyo"]={"ぎょ"},["hyo"]={"ひょ"},["jyo"]={"じょ"},["kyo"]={"きょ"},["lyo"]={"ょ"},["myo"]={"みょ"},["nyo"]={"にょ"},["pyo"]={"ぴょ"},["ryo"]={"りょ"},["syo"]={"しょ"},["swo"]={"すぉ"},["two"]={"とぉ"},["tso"]={"つぉ"},["kwo"]={"くぉ"},["gwo"]={"ぐぉ"},["hwo"]={"ふぉ"},["byo"]={"びょ"},["cyo"]={"ちょ"},["bo"]={"ぼ"},["o"]={"お"},["do"]={"ど"},["fo"]={"ふぉ"},["go"]={"ご"},["ho"]={"ほ"},["tyo"]={"ちょ"},["jo"]={"じょ"},["ko"]={"こ"},["lo"]={"ぉ"},["mo"]={"も"},["no"]={"の"},["fwo"]={"ふぉ"},["po"]={"ぽ"},["vyo"]={"ゔょ"},["ro"]={"ろ"},["so"]={"そ"},["to"]={"と"},["sho"]={"しょ"},["vo"]={"ゔぉ"},["wo"]={"を"},["xo"]={"ぉ"},["yo"]={"よ"},["zo"]={"ぞ"},["zyo"]={"じょ"},["xyo"]={"ょ"},["tho"]={"てょ"},["dho"]={"でょ"},["cho"]={"ちょ"}}
 local SLIDE_CHARS = {"ゃ","ゅ","ょ","ぁ","ぃ","ぅ","ぇ","ぉ","`"}
 local LYRIC_END_CHARS = {"+","-","`"}
 local NEXT_NOTE_CHAR = "/"
@@ -77,9 +77,11 @@ end
 ---@param note Note
 local function focusNote(mainEditor, note)
   local coordinate = mainEditor:getNavigation()
+  local currentGroup = mainEditor:getCurrentGroup()
   local viewRangeHorizontal = coordinate:getTimeViewRange()
   local viewLeft, viewRight = viewRangeHorizontal[1], viewRangeHorizontal[2]
-  local noteLeft, noteRight = note:getOnset(), note:getEnd()
+  local groupLeft = currentGroup:getOnset()
+  local noteLeft, noteRight = note:getOnset() + groupLeft, note:getEnd() + groupLeft
 
   local toleranceBlicks = (viewRight - viewLeft) * VIEW_TOLERANCE
 
